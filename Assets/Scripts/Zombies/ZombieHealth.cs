@@ -1,12 +1,12 @@
 using System;
-using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
 
 namespace ZombieApocalypse.Zombies
 {
     /// <summary>
-    /// Handles zombie health, damage reception, death state, collider disabling, and cleanup despawning.
+    /// Handles zombie health pool, damage reception, death state safety, collider disarming, and despawn cleanup.
+    /// Configuration is read from ZombieData ScriptableObject.
     /// 
     /// ATTACH TO: Zombie prefab GameObject.
     /// </summary>
@@ -17,16 +17,18 @@ namespace ZombieApocalypse.Zombies
 
         [Header("Zombie Data Config")]
         [SerializeField] private ZombieData zombieData;
-        [SerializeField] private float despawnDelay = 5.0f;
 
         private float currentHealth;
         private bool isDead;
         private Animator animator;
         private Collider zombieCollider;
+        private NavMeshAgent navMeshAgent;
 
+        public ZombieData Data => zombieData;
         public float MaxHealth => zombieData != null ? zombieData.maxHealth : 100f;
         public float CurrentHealth => currentHealth;
         public bool IsDead => isDead;
+        public float DeathDelay => zombieData != null ? zombieData.deathDelay : 5.0f;
 
         private static readonly int HurtTriggerHash = Animator.StringToHash("Hurt");
         private static readonly int IsDeadHash = Animator.StringToHash("IsDead");
@@ -35,6 +37,7 @@ namespace ZombieApocalypse.Zombies
         {
             animator = GetComponentInChildren<Animator>();
             zombieCollider = GetComponent<Collider>();
+            navMeshAgent = GetComponent<NavMeshAgent>();
         }
 
         private void Start()
@@ -46,6 +49,7 @@ namespace ZombieApocalypse.Zombies
 
         public void TakeDamage(float damage)
         {
+            // Death Safety: Prevent damage processing if already dead
             if (isDead) return;
 
             currentHealth = Mathf.Clamp(currentHealth - damage, 0f, MaxHealth);
@@ -64,32 +68,34 @@ namespace ZombieApocalypse.Zombies
 
         private void Die()
         {
+            if (isDead) return;
             isDead = true;
+
             OnZombieDied?.Invoke();
 
-            // Disable collider & physics
+            // Disable physics collider to prevent blocking movement or accepting further hit detection
             if (zombieCollider != null)
             {
                 zombieCollider.enabled = false;
             }
 
-            // Disable NavMeshAgent if attached
-            NavMeshAgent agent = GetComponent<NavMeshAgent>();
-            if (agent != null)
+            // Stop NavMeshAgent pathfinding and movement
+            if (navMeshAgent != null && navMeshAgent.isActiveAndEnabled)
             {
-                agent.enabled = false;
+                navMeshAgent.isStopped = true;
+                navMeshAgent.enabled = false;
             }
 
-            // Trigger death state on animator
+            // Trigger death state in Animator
             if (animator != null)
             {
                 animator.SetBool(IsDeadHash, true);
             }
 
-            Debug.Log($"[ZombieHealth] Zombie {name} died.");
+            Debug.Log($"[ZombieHealth] Zombie {gameObject.name} eliminated.");
 
-            // Despawn object after delay
-            Destroy(gameObject, despawnDelay);
+            // Destroy object after configured deathDelay
+            Destroy(gameObject, DeathDelay);
         }
     }
 }

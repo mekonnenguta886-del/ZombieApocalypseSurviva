@@ -11,7 +11,8 @@ namespace ZombieApocalypse.Zombies
     }
 
     /// <summary>
-    /// ScriptableObject defining stats for zombie variants.
+    /// ScriptableObject data container holding all configuration stats for zombie types.
+    /// Used by ZombieAI and ZombieHealth for centralized configuration.
     /// </summary>
     [CreateAssetMenu(fileName = "NewZombieData", menuName = "Zombie Apocalypse/Zombie Data")]
     public class ZombieData : ScriptableObject
@@ -28,6 +29,10 @@ namespace ZombieApocalypse.Zombies
         public float attackCooldown = 1.2f;
 
         [Header("Perception")]
-        public float detectionRadius = 12f;
+        public float detectionRadius = 12.0f;
+        public float loseTargetRadius = 16.0f;
+
+        [Header("Cleanup")]
+        public float deathDelay = 5.0f;
     }
 }

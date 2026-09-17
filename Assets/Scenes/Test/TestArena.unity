@@ -524,7 +524,7 @@ MonoBehaviour:
   attackRange: 2
   attackRadius: 1.2
   attackCooldown: 0.6
-  enemyLayerMask: -1
+  enemyLayerMask: 192
   attackPointOffset: {x: 0, y: 1, z: 1}
 --- !u!1 &300010
 GameObject:
@@ -1023,8 +1023,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   zombiePrefab: {fileID: 100000, guid: 91b1a9f0b123456789abcdef00000011, type: 3}
-  numberOfZombiesToSpawn: 3
-  spawnRadius: 4
+  numberOfZombiesToSpawn: 5
+  spawnRadius: 6
   spawnOnStart: 1
 --- !u!1660057539 &9223372036854775807
 SceneRoots:

@@ -5,8 +5,8 @@ using ZombieApocalypse.Zombies;
 namespace ZombieApocalypse.Player
 {
     /// <summary>
-    /// Manages player melee combat, attack cooldowns, attack area detection, and damage application to Zombie targets.
-    /// Modular design ready for expansion to equipped weapons in future phases.
+    /// Manages player melee combat, attack cooldowns, forward directional hit filtering,
+    /// dedicated enemy LayerMask query, and damage application to Zombie targets.
     /// 
     /// ATTACH TO: Player prefab GameObject.
     /// </summary>
@@ -15,9 +15,11 @@ namespace ZombieApocalypse.Player
         [Header("Combat Configuration")]
         [SerializeField] private float attackDamage = 35f;
         [SerializeField] private float attackRange = 2.0f;
-        [SerializeField] private float attackRadius = 1.0f;
+        [SerializeField] private float attackRadius = 1.2f;
         [SerializeField] private float attackCooldown = 0.6f;
-        [SerializeField] private LayerMask enemyLayerMask = ~0; // Default all layers
+
+        [Header("Layer Filtering")]
+        [SerializeField] private LayerMask enemyLayerMask = (1 << 6) | (1 << 7); // Default to Zombie (Layer 6) and Enemy (Layer 7)
 
         [Header("Attack Offset")]
         [SerializeField] private Vector3 attackPointOffset = new Vector3(0f, 1.0f, 1.0f);
@@ -40,6 +42,7 @@ namespace ZombieApocalypse.Player
 
         private void Update()
         {
+            // Player Death Safety: Disable combat if player is dead
             if (playerHealth != null && playerHealth.IsDead) return;
 
             if (inputHandler != null && inputHandler.AttackTriggered)
@@ -68,25 +71,36 @@ namespace ZombieApocalypse.Player
         {
             isAttacking = true;
 
-            // Trigger animation
+            // Trigger Attack animation
             if (playerAnimation != null)
             {
                 playerAnimation.TriggerAttack();
             }
 
-            // Small delay to align hit registration with attack motion
             yield return new WaitForSeconds(0.15f);
 
-            // Detect enemy targets in front of player
+            // Forward Attack Point calculation
             Vector3 attackPosition = transform.TransformPoint(attackPointOffset);
+
+            // LayerMask OverlapSphere query: Only detects objects on the dedicated enemy/zombie layer
             Collider[] hitColliders = Physics.OverlapSphere(attackPosition, attackRadius, enemyLayerMask, QueryTriggerInteraction.Ignore);
 
             foreach (var col in hitColliders)
             {
-                // Ignore self
+                // Ignore self / child colliders
                 if (col.transform.IsChildOf(transform) || col.gameObject == gameObject) continue;
 
-                // Check for Zombie Health component
+                // Directional Forward Check: Ensure zombie is in front of the player (not behind)
+                Vector3 dirToTarget = (col.transform.position - transform.position).normalized;
+                float dot = Vector3.Dot(transform.forward, dirToTarget);
+
+                if (dot < -0.2f)
+                {
+                    // Target is behind player, ignore
+                    continue;
+                }
+
+                // Retrieve ZombieHealth component
                 ZombieHealth zombieHealth = col.GetComponent<ZombieHealth>();
                 if (zombieHealth == null)
                 {
@@ -96,11 +110,11 @@ namespace ZombieApocalypse.Player
                 if (zombieHealth != null && !zombieHealth.IsDead)
                 {
                     zombieHealth.TakeDamage(attackDamage);
-                    Debug.Log($"[PlayerCombat] Player struck {col.name} for {attackDamage} damage!");
+                    Debug.Log($"[PlayerCombat] Player struck {col.name} dealing {attackDamage} damage.");
                 }
             }
 
-            yield return new WaitForSeconds(attackCooldown - 0.15f);
+            yield return new WaitForSeconds(Mathf.Max(0.05f, attackCooldown - 0.15f));
             isAttacking = false;
         }
 

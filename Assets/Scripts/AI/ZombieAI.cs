@@ -14,24 +14,18 @@ namespace ZombieApocalypse.AI
     }
 
     /// <summary>
-    /// Simple finite state machine zombie AI.
-    /// Handles player detection, pathfinding chase, attack execution, and cooldowns.
+    /// Smooth NavMeshAgent-based Zombie AI state machine.
+    /// Manages player perception, pathfinding chase, attack execution, and death safety.
+    /// Reads configuration values directly from ZombieData ScriptableObject.
     /// 
     /// ATTACH TO: Zombie prefab GameObject.
     /// </summary>
+    [RequireComponent(typeof(NavMeshAgent))]
+    [RequireComponent(typeof(ZombieHealth))]
     public class ZombieAI : MonoBehaviour
     {
-        [Header("Zombie Data Config")]
+        [Header("Zombie Data Reference")]
         [SerializeField] private ZombieData zombieData;
-
-        [Header("Perception & Attack Settings")]
-        [SerializeField] private float detectionRadius = 12.0f;
-        [SerializeField] private float loseTargetRadius = 16.0f;
-        [SerializeField] private float attackRange = 1.8f;
-        [SerializeField] private float attackDamage = 15.0f;
-        [SerializeField] private float attackCooldown = 1.2f;
-        [SerializeField] private float moveSpeed = 2.5f;
-        [SerializeField] private float rotationSpeed = 8.0f;
 
         [Header("Current State")]
         [SerializeField] private AIState currentState = AIState.Idle;
@@ -57,25 +51,18 @@ namespace ZombieApocalypse.AI
             zombieHealth = GetComponent<ZombieHealth>();
             animator = GetComponentInChildren<Animator>();
 
-            if (zombieData != null)
+            // Configure Rigidbody safety if present
+            Rigidbody rb = GetComponent<Rigidbody>();
+            if (rb != null)
             {
-                detectionRadius = zombieData.detectionRadius;
-                attackRange = zombieData.attackRange;
-                attackDamage = zombieData.attackDamage;
-                attackCooldown = zombieData.attackCooldown;
-                moveSpeed = zombieData.moveSpeed;
+                rb.isKinematic = true;
             }
         }
 
         private void Start()
         {
+            ApplyZombieDataConfig();
             FindPlayerReference();
-
-            if (navMeshAgent != null)
-            {
-                navMeshAgent.speed = moveSpeed;
-                navMeshAgent.stoppingDistance = attackRange * 0.8f;
-            }
 
             if (zombieHealth != null)
             {
@@ -91,6 +78,20 @@ namespace ZombieApocalypse.AI
             }
         }
 
+        private void ApplyZombieDataConfig()
+        {
+            if (zombieData == null && zombieHealth != null)
+            {
+                zombieData = zombieHealth.Data;
+            }
+
+            if (zombieData != null && navMeshAgent != null)
+            {
+                navMeshAgent.speed = zombieData.moveSpeed;
+                navMeshAgent.stoppingDistance = zombieData.attackRange * 0.85f;
+            }
+        }
+
         private void FindPlayerReference()
         {
             GameObject playerObj = GameObject.FindWithTag("Player");
@@ -103,9 +104,13 @@ namespace ZombieApocalypse.AI
 
         private void Update()
         {
+            // Death Safety Guard: If zombie is dead, remain in DEAD state and stop AI
             if (zombieHealth != null && zombieHealth.IsDead)
             {
-                currentState = AIState.Dead;
+                if (currentState != AIState.Dead)
+                {
+                    HandleZombieDeath();
+                }
                 return;
             }
 
@@ -115,99 +120,86 @@ namespace ZombieApocalypse.AI
                 if (playerTransform == null) return;
             }
 
-            // Stop AI if player is dead
+            // Player Death Safety: If player is dead, cease all chase and attack behaviors
             if (playerHealth.IsDead)
             {
-                SetState(AIState.Idle);
-                UpdateAnimator(0f, false);
-                return;
-            }
-
-            float distanceToPlayer = Vector3.Distance(transform.position, playerTransform.position);
-
-            switch (currentState)
-            {
-                case AIState.Idle:
-                    UpdateIdleState(distanceToPlayer);
-                    break;
-                case AIState.Chase:
-                    UpdateChaseState(distanceToPlayer);
-                    break;
-                case AIState.Attack:
-                    UpdateAttackState(distanceToPlayer);
-                    break;
-            }
-        }
-
-        private void UpdateIdleState(float distanceToPlayer)
-        {
-            UpdateAnimator(0f, false);
-
-            if (distanceToPlayer <= detectionRadius)
-            {
-                SetState(AIState.Chase);
-            }
-        }
-
-        private void UpdateChaseState(float distanceToPlayer)
-        {
-            if (distanceToPlayer > loseTargetRadius)
-            {
-                SetState(AIState.Idle);
-                if (navMeshAgent != null && navMeshAgent.isActiveAndEnabled && navMeshAgent.isOnNavMesh)
+                if (currentState != AIState.Idle)
                 {
-                    navMeshAgent.ResetPath();
+                    SetState(AIState.Idle);
+                    StopNavMeshMovement();
+                    UpdateAnimator(0f, false);
                 }
                 return;
             }
 
-            if (distanceToPlayer <= attackRange)
-            {
-                SetState(AIState.Attack);
-                return;
-            }
+            float distanceToPlayer = Vector3.Distance(transform.position, playerTransform.position);
+            float detectionRad = zombieData != null ? zombieData.detectionRadius : 12f;
+            float loseRad = zombieData != null ? zombieData.loseTargetRadius : 16f;
+            float atkRange = zombieData != null ? zombieData.attackRange : 1.8f;
 
-            // Move towards player
-            if (navMeshAgent != null && navMeshAgent.isActiveAndEnabled && navMeshAgent.isOnNavMesh)
+            switch (currentState)
             {
-                navMeshAgent.isStopped = false;
-                navMeshAgent.SetDestination(playerTransform.position);
-            }
-            else
-            {
-                // Fallback direct movement
-                Vector3 moveDir = (playerTransform.position - transform.position).normalized;
-                moveDir.y = 0f;
-                transform.position += moveDir * moveSpeed * Time.deltaTime;
-            }
+                case AIState.Idle:
+                    UpdateAnimator(0f, false);
+                    if (distanceToPlayer <= detectionRad)
+                    {
+                        SetState(AIState.Chase);
+                    }
+                    break;
 
-            // Smooth rotation towards player
-            RotateTowardsPlayer();
-            UpdateAnimator(moveSpeed, false);
+                case AIState.Chase:
+                    if (distanceToPlayer > loseRad)
+                    {
+                        SetState(AIState.Idle);
+                        StopNavMeshMovement();
+                        return;
+                    }
+
+                    if (distanceToPlayer <= atkRange)
+                    {
+                        SetState(AIState.Attack);
+                        return;
+                    }
+
+                    // Move towards player via NavMeshAgent
+                    if (navMeshAgent != null && navMeshAgent.isActiveAndEnabled && navMeshAgent.isOnNavMesh)
+                    {
+                        navMeshAgent.isStopped = false;
+                        navMeshAgent.SetDestination(playerTransform.position);
+                    }
+
+                    UpdateAnimator(navMeshAgent != null ? navMeshAgent.speed : 2.5f, false);
+                    break;
+
+                case AIState.Attack:
+                    if (distanceToPlayer > atkRange * 1.3f)
+                    {
+                        SetState(AIState.Chase);
+                        return;
+                    }
+
+                    // Stop locomotion during attack
+                    StopNavMeshMovement();
+                    RotateTowardsPlayer();
+                    UpdateAnimator(0f, true);
+
+                    // Execute Attack on Cooldown
+                    float cooldown = zombieData != null ? zombieData.attackCooldown : 1.2f;
+                    if (Time.time >= lastAttackTime + cooldown)
+                    {
+                        lastAttackTime = Time.time;
+                        ExecuteAttack();
+                    }
+                    break;
+            }
         }
 
-        private void UpdateAttackState(float distanceToPlayer)
+        private void StopNavMeshMovement()
         {
-            if (distanceToPlayer > attackRange * 1.3f)
-            {
-                SetState(AIState.Chase);
-                return;
-            }
-
-            // Stop movement
             if (navMeshAgent != null && navMeshAgent.isActiveAndEnabled && navMeshAgent.isOnNavMesh)
             {
                 navMeshAgent.isStopped = true;
-            }
-
-            RotateTowardsPlayer();
-            UpdateAnimator(0f, true);
-
-            // Execute Attack on Cooldown
-            if (Time.time >= lastAttackTime + attackCooldown)
-            {
-                lastAttackTime = Time.time;
-                ExecuteAttack();
+                navMeshAgent.ResetPath();
             }
         }
 
@@ -215,8 +207,9 @@ namespace ZombieApocalypse.AI
         {
             if (playerHealth != null && !playerHealth.IsDead)
             {
-                playerHealth.TakeDamage(attackDamage);
-                Debug.Log($"[ZombieAI] Zombie {gameObject.name} attacked player dealing {attackDamage} damage!");
+                float damage = zombieData != null ? zombieData.attackDamage : 15f;
+                playerHealth.TakeDamage(damage);
+                Debug.Log($"[ZombieAI] {gameObject.name} attacked player dealing {damage} damage.");
             }
         }
 
@@ -229,7 +222,7 @@ namespace ZombieApocalypse.AI
             if (direction.sqrMagnitude > 0.001f)
             {
                 Quaternion lookRotation = Quaternion.LookRotation(direction);
-                transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, rotationSpeed * Time.deltaTime);
+                transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, Time.deltaTime * 8.0f);
             }
         }
 
@@ -248,20 +241,23 @@ namespace ZombieApocalypse.AI
         private void HandleZombieDeath()
         {
             currentState = AIState.Dead;
-            if (navMeshAgent != null && navMeshAgent.isActiveAndEnabled)
+            StopNavMeshMovement();
+            if (navMeshAgent != null)
             {
-                navMeshAgent.isStopped = true;
                 navMeshAgent.enabled = false;
             }
         }
 
         private void OnDrawGizmosSelected()
         {
+            float detRad = zombieData != null ? zombieData.detectionRadius : 12f;
+            float atkRad = zombieData != null ? zombieData.attackRange : 1.8f;
+
             Gizmos.color = Color.yellow;
-            Gizmos.DrawWireSphere(transform.position, detectionRadius);
+            Gizmos.DrawWireSphere(transform.position, detRad);
 
             Gizmos.color = Color.red;
-            Gizmos.DrawWireSphere(transform.position, attackRange);
+            Gizmos.DrawWireSphere(transform.position, atkRad);
         }
     }
 }

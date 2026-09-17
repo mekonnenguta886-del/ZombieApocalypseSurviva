@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 100004}
   - component: {fileID: 100005}
   - component: {fileID: 100006}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Zombie
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -118,7 +118,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 91b1a9f0b123456789abcdef00000006, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  despawnDelay: 5
+  zombieData: {fileID: 11400000, guid: 91b1a9f0b123456789abcdef0000000d, type: 2}
 --- !u!114 &100006
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -131,13 +131,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 91b1a9f0b123456789abcdef00000007, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  detectionRadius: 12
-  loseTargetRadius: 16
-  attackRange: 1.8
-  attackDamage: 15
-  attackCooldown: 1.2
-  moveSpeed: 2.5
-  rotationSpeed: 8
+  zombieData: {fileID: 11400000, guid: 91b1a9f0b123456789abcdef0000000d, type: 2}
   currentState: 0
 --- !u!1 &100010
 GameObject:
@@ -151,7 +145,7 @@ GameObject:
   - component: {fileID: 100011}
   - component: {fileID: 100012}
   - component: {fileID: 100013}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Model
   m_TagString: Untagged
   m_Icon: {fileID: 0}
