@@ -4,8 +4,8 @@ using UnityEngine.InputSystem;
 namespace ZombieApocalypse.Player
 {
     /// <summary>
-    /// Reads inputs from PlayerInputActions wrapper.
-    /// Exposes movement, aiming, firing, reloading, and weapon selection properties.
+    /// Uses the auto-generated PlayerInputActions wrapper class from PlayerInputActions.inputactions.
+    /// Manages action map enable/disable lifecycle and exposes input getters for PlayerController, PlayerCombat, and WeaponController.
     /// 
     /// ATTACH TO: Player prefab GameObject.
     /// </summary>

@@ -1,18 +1,20 @@
 using System.Collections;
 using UnityEngine;
+using ZombieApocalypse.Weapons;
 using ZombieApocalypse.Zombies;
 
 namespace ZombieApocalypse.Player
 {
     /// <summary>
-    /// Manages player melee combat, attack cooldowns, forward directional hit filtering,
-    /// dedicated enemy LayerMask query, and damage application to Zombie targets.
+    /// Preserved Phase 3 Melee Combat system. Handles player melee attacks, attack cooldowns,
+    /// directional hit filtering, and enemy LayerMask queries.
+    /// Integrated safely alongside Phase 4 ranged weapons.
     /// 
     /// ATTACH TO: Player prefab GameObject.
     /// </summary>
     public class PlayerCombat : MonoBehaviour
     {
-        [Header("Combat Configuration")]
+        [Header("Melee Combat Config")]
         [SerializeField] private float attackDamage = 35f;
         [SerializeField] private float attackRange = 2.0f;
         [SerializeField] private float attackRadius = 1.2f;
@@ -27,6 +29,7 @@ namespace ZombieApocalypse.Player
         private PlayerInputHandler inputHandler;
         private PlayerAnimation playerAnimation;
         private PlayerHealth playerHealth;
+        private WeaponController weaponController;
 
         private float lastAttackTime;
         private bool isAttacking;
@@ -38,6 +41,7 @@ namespace ZombieApocalypse.Player
             inputHandler = GetComponent<PlayerInputHandler>();
             playerAnimation = GetComponent<PlayerAnimation>();
             playerHealth = GetComponent<PlayerHealth>();
+            weaponController = GetComponent<WeaponController>();
         }
 
         private void Update()
@@ -45,9 +49,19 @@ namespace ZombieApocalypse.Player
             // Player Death Safety: Disable combat if player is dead
             if (playerHealth != null && playerHealth.IsDead) return;
 
+            // If ranged weapon is active and aiming, skip melee trigger to avoid input conflicts
+            if (weaponController != null && weaponController.CurrentWeapon != null && inputHandler != null && inputHandler.AimHeld)
+            {
+                return;
+            }
+
             if (inputHandler != null && inputHandler.AttackTriggered)
             {
-                TryPerformAttack();
+                // Only trigger melee if no ranged weapon is firing/reloading or if explicitly triggered
+                if (weaponController == null || weaponController.CurrentWeapon == null || (!weaponController.IsReloading && !inputHandler.AimHeld))
+                {
+                    TryPerformAttack();
+                }
                 inputHandler.ResetAttackTrigger();
             }
         }
@@ -71,7 +85,6 @@ namespace ZombieApocalypse.Player
         {
             isAttacking = true;
 
-            // Trigger Attack animation
             if (playerAnimation != null)
             {
                 playerAnimation.TriggerAttack();
@@ -79,28 +92,18 @@ namespace ZombieApocalypse.Player
 
             yield return new WaitForSeconds(0.15f);
 
-            // Forward Attack Point calculation
             Vector3 attackPosition = transform.TransformPoint(attackPointOffset);
-
-            // LayerMask OverlapSphere query: Only detects objects on the dedicated enemy/zombie layer
             Collider[] hitColliders = Physics.OverlapSphere(attackPosition, attackRadius, enemyLayerMask, QueryTriggerInteraction.Ignore);
 
             foreach (var col in hitColliders)
             {
-                // Ignore self / child colliders
                 if (col.transform.IsChildOf(transform) || col.gameObject == gameObject) continue;
 
-                // Directional Forward Check: Ensure zombie is in front of the player (not behind)
                 Vector3 dirToTarget = (col.transform.position - transform.position).normalized;
                 float dot = Vector3.Dot(transform.forward, dirToTarget);
 
-                if (dot < -0.2f)
-                {
-                    // Target is behind player, ignore
-                    continue;
-                }
+                if (dot < -0.2f) continue; // Behind player guard
 
-                // Retrieve ZombieHealth component
                 ZombieHealth zombieHealth = col.GetComponent<ZombieHealth>();
                 if (zombieHealth == null)
                 {
@@ -110,7 +113,7 @@ namespace ZombieApocalypse.Player
                 if (zombieHealth != null && !zombieHealth.IsDead)
                 {
                     zombieHealth.TakeDamage(attackDamage);
-                    Debug.Log($"[PlayerCombat] Player struck {col.name} dealing {attackDamage} damage.");
+                    Debug.Log($"[PlayerCombat] Melee struck {col.name} dealing {attackDamage} damage.");
                 }
             }
 

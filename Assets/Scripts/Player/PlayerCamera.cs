@@ -40,7 +40,7 @@ namespace ZombieApocalypse.Player
         private Camera mainCamera;
         private float yaw;
         private float pitch;
-        private float recoilPitch;
+        private float recoilPitchOffset;
         private float currentDistance;
         private bool isAiming;
         private Vector3 currentRotationVelocity;
@@ -91,15 +91,13 @@ namespace ZombieApocalypse.Player
             Vector2 lookInput = PlayerInputHandler.Instance.LookInput;
             yaw += lookInput.x * mouseSensitivity;
             pitch -= lookInput.y * mouseSensitivity;
+            pitch = Mathf.Clamp(pitch, minPitch, maxPitch);
 
-            // Apply recoil recovery
-            if (recoilPitch > 0.01f)
+            // Smoothly recover recoil impulse offset back to zero
+            if (recoilPitchOffset > 0.001f)
             {
-                float recoilRecover = recoilPitch * 10f * Time.deltaTime;
-                recoilPitch -= recoilRecover;
+                recoilPitchOffset = Mathf.MoveTowards(recoilPitchOffset, 0f, 15f * Time.deltaTime);
             }
-
-            pitch = Mathf.Clamp(pitch - recoilPitch, minPitch, maxPitch);
 
             // Read Aim state from InputHandler
             isAiming = PlayerInputHandler.Instance.AimHeld;
@@ -116,8 +114,8 @@ namespace ZombieApocalypse.Player
 
         private void UpdateCameraPositionAndRotation()
         {
-            // Smooth Rotation
-            targetRotation = new Vector3(pitch, yaw, 0f);
+            // Smooth Rotation (includes recoil impulse offset without altering base mouse pitch)
+            targetRotation = new Vector3(pitch - recoilPitchOffset, yaw, 0f);
             currentRotation = Vector3.SmoothDamp(currentRotation, targetRotation, ref currentRotationVelocity, rotationSmoothTime);
             transform.eulerAngles = currentRotation;
 
@@ -147,12 +145,12 @@ namespace ZombieApocalypse.Player
         }
 
         /// <summary>
-        /// Applies vertical camera recoil kick on firing.
+        /// Applies temporary vertical camera recoil kick on firing.
         /// </summary>
         public void ApplyRecoil(float recoilAmount)
         {
-            pitch -= recoilAmount;
-            pitch = Mathf.Clamp(pitch, minPitch, maxPitch);
+            recoilPitchOffset += recoilAmount;
+            recoilPitchOffset = Mathf.Clamp(recoilPitchOffset, 0f, 10f);
         }
 
         public void SetTarget(Transform newTarget)

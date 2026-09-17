@@ -98,10 +98,15 @@ namespace ZombieApocalypse.Weapons
 
         private void Update()
         {
-            // Player Death Safety Guard
+            // Player Death Safety Guard: Instantly stop weapon actions, cancel reloading, and stop coroutines
             if (playerHealth != null && playerHealth.IsDead)
             {
-                isReloading = false;
+                if (isReloading)
+                {
+                    isReloading = false;
+                    StopAllCoroutines();
+                    NotifyHUD();
+                }
                 return;
             }
 
@@ -228,9 +233,13 @@ namespace ZombieApocalypse.Weapons
             lastFireTime = Time.time;
             CurrentSlot.currentMagazineAmmo--;
 
-            // Calculate Raycast from viewport center (over the shoulder / crosshair)
-            Vector3 rayOrigin = mainCamera != null ? mainCamera.transform.position : transform.position + Vector3.up * 1.5f;
-            Vector3 rayDirection = mainCamera != null ? mainCamera.transform.forward : transform.forward;
+            // Calculate Raycast from camera viewport center (0.5, 0.5) so crosshair and shooting direction match perfectly
+            Ray cameraRay = mainCamera != null 
+                ? mainCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f)) 
+                : new Ray(transform.position + Vector3.up * 1.5f, transform.forward);
+
+            Vector3 rayOrigin = cameraRay.origin;
+            Vector3 rayDirection = cameraRay.direction;
 
             // Execute pellets (1 for Pistol/Rifle, multiple for Shotgun)
             int pellets = Mathf.Max(1, CurrentWeapon.pelletsPerShot);
