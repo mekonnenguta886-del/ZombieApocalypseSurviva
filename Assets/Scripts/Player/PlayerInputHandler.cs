@@ -1,14 +1,11 @@
 using UnityEngine;
-
-#if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
-#endif
 
 namespace ZombieApocalypse.Player
 {
     /// <summary>
-    /// Handles user input reading using Unity's New Input System.
-    /// Provides decoupled input getters for movement, camera look, sprint, crouch, and jump.
+    /// Uses the auto-generated PlayerInputActions wrapper class from PlayerInputActions.inputactions.
+    /// Manages action map enable/disable lifecycle and exposes input getters for PlayerController.
     /// 
     /// ATTACH TO: Player prefab GameObject.
     /// </summary>
@@ -16,14 +13,15 @@ namespace ZombieApocalypse.Player
     {
         public static PlayerInputHandler Instance { get; private set; }
 
-        [Header("Input Values")]
+        private PlayerInputActions inputActions;
+
         public Vector2 MoveInput { get; private set; }
         public Vector2 LookInput { get; private set; }
         public bool JumpTriggered { get; private set; }
         public bool SprintHeld { get; private set; }
         public bool CrouchTriggered { get; private set; }
 
-        [Header("Settings")]
+        [Header("Cursor Settings")]
         [SerializeField] private bool lockCursor = true;
 
         private void Awake()
@@ -34,6 +32,27 @@ namespace ZombieApocalypse.Player
                 return;
             }
             Instance = this;
+
+            inputActions = new PlayerInputActions();
+        }
+
+        private void OnEnable()
+        {
+            if (inputActions != null)
+            {
+                inputActions.Player.Enable();
+            }
+        }
+
+        private void OnDisable()
+        {
+            if (inputActions != null)
+            {
+                inputActions.Player.Disable();
+            }
+
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
         }
 
         private void Start()
@@ -47,55 +66,22 @@ namespace ZombieApocalypse.Player
 
         private void Update()
         {
-            ReadInput();
-        }
+            if (inputActions == null) return;
 
-        private void ReadInput()
-        {
-#if ENABLE_INPUT_SYSTEM
-            if (Keyboard.current != null)
+            MoveInput = inputActions.Player.Move.ReadValue<Vector2>();
+            LookInput = inputActions.Player.Look.ReadValue<Vector2>();
+
+            if (inputActions.Player.Jump.wasPressedThisFrame)
             {
-                // Movement (WASD / Arrows)
-                float moveX = 0f;
-                float moveY = 0f;
-
-                if (Keyboard.current.wKey.isPressed) moveY += 1f;
-                if (Keyboard.current.sKey.isPressed) moveY -= 1f;
-                if (Keyboard.current.dKey.isPressed) moveX += 1f;
-                if (Keyboard.current.aKey.isPressed) moveX -= 1f;
-
-                MoveInput = new Vector2(moveX, moveY).normalized;
-
-                // Sprint (Left Shift)
-                SprintHeld = Keyboard.current.leftShiftKey.isPressed;
-
-                // Jump (Space)
-                JumpTriggered = Keyboard.current.spaceKey.wasPressedThisFrame;
-
-                // Crouch (Left Ctrl or C)
-                CrouchTriggered = Keyboard.current.leftCtrlKey.wasPressedThisFrame || Keyboard.current.cKey.wasPressedThisFrame;
+                JumpTriggered = true;
             }
 
-            if (Mouse.current != null)
+            SprintHeld = inputActions.Player.Sprint.IsPressed();
+
+            if (inputActions.Player.Crouch.wasPressedThisFrame)
             {
-                // Mouse Delta
-                Vector2 mouseDelta = Mouse.current.delta.ReadValue();
-                LookInput = mouseDelta;
+                CrouchTriggered = true;
             }
-#else
-            // Fallback for Legacy Input Manager
-            float moveX = Input.GetAxisRaw("Horizontal");
-            float moveY = Input.GetAxisRaw("Vertical");
-            MoveInput = new Vector2(moveX, moveY).normalized;
-
-            float mouseX = Input.GetAxis("Mouse X");
-            float mouseY = Input.GetAxis("Mouse Y");
-            LookInput = new Vector2(mouseX, mouseY);
-
-            SprintHeld = Input.GetKey(KeyCode.LeftShift);
-            JumpTriggered = Input.GetKeyDown(KeyCode.Space);
-            CrouchTriggered = Input.GetKeyDown(KeyCode.LeftControl) || Input.GetKeyDown(KeyCode.C);
-#endif
         }
 
         public void ResetJumpTrigger()
@@ -106,12 +92,6 @@ namespace ZombieApocalypse.Player
         public void ResetCrouchTrigger()
         {
             CrouchTriggered = false;
-        }
-
-        private void OnDisable()
-        {
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
         }
     }
 }

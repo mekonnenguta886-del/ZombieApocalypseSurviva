@@ -3,11 +3,11 @@ using UnityEngine;
 namespace ZombieApocalypse.Player
 {
     /// <summary>
-    /// Professional 3rd-person camera follower and mouse orbit controller.
-    /// Supports pitch/yaw mouse rotation, distance damping, target height offset,
-    /// pitch clamping, and collision obstruction check.
+    /// Professional 3rd-person camera controller designed for Cinemachine integration or standalone smooth orbit.
+    /// Drives smooth pitch/yaw rotation around CameraTarget with obstruction raycasting and pitch clamping.
+    /// Prepared for future aiming, recoil, zoom, and camera state transitions.
     /// 
-    /// ATTACH TO: Main Camera GameObject.
+    /// ATTACH TO: Main Camera GameObject or Cinemachine Camera Rig.
     /// </summary>
     public class PlayerCamera : MonoBehaviour
     {
@@ -15,7 +15,7 @@ namespace ZombieApocalypse.Player
         [SerializeField] private Transform targetTransform;
         [SerializeField] private Vector3 targetOffset = new Vector3(0f, 1.5f, 0f);
 
-        [Header("Distance & Limits")]
+        [Header("Camera Orbit Limits")]
         [SerializeField] private float defaultDistance = 3.5f;
         [SerializeField] private float minDistance = 1.0f;
         [SerializeField] private float maxDistance = 6.0f;
@@ -27,12 +27,11 @@ namespace ZombieApocalypse.Player
         [SerializeField] private float rotationSmoothTime = 0.05f;
         [SerializeField] private float positionSmoothTime = 0.05f;
 
-        [Header("Camera Collision")]
+        [Header("Collision & Obstruction")]
         [SerializeField] private bool enableCollisionCheck = true;
-        [SerializeField] private float collisionRadius = 0.2f;
-        [SerializeField] private LayerMask collisionLayers = ~0; // Default all
+        [SerializeField] private float collisionRadius = 0.25f;
+        [SerializeField] private LayerMask collisionLayers = ~0;
 
-        // Rotation & Movement Tracking
         private float yaw;
         private float pitch;
         private float currentDistance;
@@ -49,7 +48,6 @@ namespace ZombieApocalypse.Player
 
             if (targetTransform == null)
             {
-                // Auto-find Player GameObject if target non-assigned
                 GameObject player = GameObject.FindWithTag("Player");
                 if (player != null)
                 {
@@ -78,23 +76,22 @@ namespace ZombieApocalypse.Player
             Vector2 lookInput = PlayerInputHandler.Instance.LookInput;
             yaw += lookInput.x * mouseSensitivity;
             pitch -= lookInput.y * mouseSensitivity;
-
             pitch = Mathf.Clamp(pitch, minPitch, maxPitch);
         }
 
         private void UpdateCameraPositionAndRotation()
         {
-            // Smooth Rotation
+            // Smooth rotation interpolation
             targetRotation = new Vector3(pitch, yaw, 0f);
             currentRotation = Vector3.SmoothDamp(currentRotation, targetRotation, ref currentRotationVelocity, rotationSmoothTime);
             transform.eulerAngles = currentRotation;
 
-            // Target Position Calculation
+            // Calculate pivot position
             Vector3 targetCenter = targetTransform.position + targetOffset;
             Quaternion rotation = Quaternion.Euler(currentRotation);
             Vector3 desiredCameraPos = targetCenter - (rotation * Vector3.forward * defaultDistance);
 
-            // Camera Obstruction / Collision check
+            // Obstruction raycast cast
             float finalDistance = defaultDistance;
             if (enableCollisionCheck)
             {
@@ -111,9 +108,6 @@ namespace ZombieApocalypse.Player
             transform.position = Vector3.SmoothDamp(transform.position, finalCameraPos, ref currentPositionVelocity, positionSmoothTime);
         }
 
-        /// <summary>
-        /// Explicitly binds target transform (e.g. Player's CameraTarget).
-        /// </summary>
         public void SetTarget(Transform newTarget)
         {
             targetTransform = newTarget;
