@@ -5,7 +5,7 @@ namespace ZombieApocalypse.Player
 {
     /// <summary>
     /// Uses the auto-generated PlayerInputActions wrapper class from PlayerInputActions.inputactions.
-    /// Manages action map enable/disable lifecycle and exposes input getters for PlayerController.
+    /// Manages action map enable/disable lifecycle and exposes input getters for PlayerController and PlayerCombat.
     /// 
     /// ATTACH TO: Player prefab GameObject.
     /// </summary>
@@ -20,6 +20,7 @@ namespace ZombieApocalypse.Player
         public bool JumpTriggered { get; private set; }
         public bool SprintHeld { get; private set; }
         public bool CrouchTriggered { get; private set; }
+        public bool AttackTriggered { get; private set; }
 
         [Header("Cursor Settings")]
         [SerializeField] private bool lockCursor = true;
@@ -82,6 +83,11 @@ namespace ZombieApocalypse.Player
             {
                 CrouchTriggered = true;
             }
+
+            if (inputActions.Player.Attack.wasPressedThisFrame)
+            {
+                AttackTriggered = true;
+            }
         }
 
         public void ResetJumpTrigger()
@@ -92,6 +98,11 @@ namespace ZombieApocalypse.Player
         public void ResetCrouchTrigger()
         {
             CrouchTriggered = false;
+        }
+
+        public void ResetAttackTrigger()
+        {
+            AttackTriggered = false;
         }
     }
 }

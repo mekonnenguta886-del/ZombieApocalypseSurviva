@@ -6,7 +6,7 @@ namespace ZombieApocalypse.Player
     /// <summary>
     /// Manages player health pool, damage processing, healing, and death callbacks.
     /// 
-    /// ATTACH TO: Player prefab GameObject (e.g. "Player").
+    /// ATTACH TO: Player prefab GameObject.
     /// </summary>
     public class PlayerHealth : MonoBehaviour
     {
@@ -16,14 +16,16 @@ namespace ZombieApocalypse.Player
         [Header("Health Settings")]
         [SerializeField] private float maxHealth = 100f;
         private float currentHealth;
+        private bool isDead;
 
         public float MaxHealth => maxHealth;
         public float CurrentHealth => currentHealth;
-        public bool IsDead => currentHealth <= 0f;
+        public bool IsDead => isDead;
 
         private void Start()
         {
             currentHealth = maxHealth;
+            isDead = false;
             OnHealthChanged?.Invoke(currentHealth, maxHealth);
         }
 
@@ -32,15 +34,16 @@ namespace ZombieApocalypse.Player
         /// </summary>
         public void TakeDamage(float amount)
         {
-            if (IsDead) return;
+            if (isDead) return;
 
             currentHealth = Mathf.Clamp(currentHealth - amount, 0f, maxHealth);
             OnHealthChanged?.Invoke(currentHealth, maxHealth);
 
-            if (IsDead)
+            if (currentHealth <= 0f && !isDead)
             {
+                isDead = true;
                 OnPlayerDied?.Invoke();
-                Debug.Log("[PlayerHealth] Player has died.");
+                Debug.Log("[PlayerHealth] Player eliminated!");
             }
         }
 
@@ -49,7 +52,7 @@ namespace ZombieApocalypse.Player
         /// </summary>
         public void Heal(float amount)
         {
-            if (IsDead) return;
+            if (isDead) return;
 
             currentHealth = Mathf.Clamp(currentHealth + amount, 0f, maxHealth);
             OnHealthChanged?.Invoke(currentHealth, maxHealth);

@@ -11,7 +11,7 @@ namespace ZombieApocalypse.Zombies
     }
 
     /// <summary>
-    /// ScriptableObject defining stats for zombie variants (Walker, Runner, Tank, Boss).
+    /// ScriptableObject defining stats for zombie variants.
     /// </summary>
     [CreateAssetMenu(fileName = "NewZombieData", menuName = "Zombie Apocalypse/Zombie Data")]
     public class ZombieData : ScriptableObject
@@ -22,13 +22,12 @@ namespace ZombieApocalypse.Zombies
 
         [Header("Attributes")]
         public float maxHealth = 100f;
-        public float moveSpeed = 2.0f;
+        public float moveSpeed = 2.5f;
         public float attackDamage = 15f;
-        public float attackRange = 1.5f;
+        public float attackRange = 1.8f;
         public float attackCooldown = 1.2f;
 
         [Header("Perception")]
-        public float sightDistance = 15f;
-        public float hearingRadius = 10f;
+        public float detectionRadius = 12f;
     }
 }

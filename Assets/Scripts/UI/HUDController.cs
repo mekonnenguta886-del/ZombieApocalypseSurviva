@@ -1,11 +1,13 @@
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using ZombieApocalypse.Player;
 
 namespace ZombieApocalypse.UI
 {
     /// <summary>
-    /// Updates game HUD UI elements (Health bar, Stamina bar, Ammo counter, Objective text).
+    /// Updates HUD UI elements (Health Bar, Stamina Bar, Objective Text, Death Screen).
+    /// Listens to PlayerHealth and PlayerStamina events automatically.
     /// 
     /// ATTACH TO: Gameplay Canvas HUD Root GameObject.
     /// </summary>
@@ -15,12 +17,55 @@ namespace ZombieApocalypse.UI
         [SerializeField] private Slider healthBarSlider;
         [SerializeField] private Slider staminaBarSlider;
 
-        [Header("Weapon & Ammo UI")]
-        [SerializeField] private TextMeshProUGUI ammoText;
-        [SerializeField] private Image crosshairImage;
-
-        [Header("Mission UI")]
+        [Header("Overlay UI")]
+        [SerializeField] private GameObject gameOverPanel;
         [SerializeField] private TextMeshProUGUI objectiveText;
+
+        private PlayerHealth playerHealth;
+        private PlayerStamina playerStamina;
+
+        private void Start()
+        {
+            FindAndBindPlayer();
+            if (gameOverPanel != null) gameOverPanel.SetActive(false);
+        }
+
+        public void FindAndBindPlayer()
+        {
+            GameObject playerObj = GameObject.FindWithTag("Player");
+            if (playerObj != null)
+            {
+                playerHealth = playerObj.GetComponent<PlayerHealth>();
+                playerStamina = playerObj.GetComponent<PlayerStamina>();
+
+                if (playerHealth != null)
+                {
+                    playerHealth.OnHealthChanged += UpdateHealth;
+                    playerHealth.OnPlayerDied += ShowGameOverScreen;
+                    UpdateHealth(playerHealth.CurrentHealth, playerHealth.MaxHealth);
+                }
+
+                if (playerStamina != null)
+                {
+                    playerStamina.OnStaminaChanged += UpdateStamina;
+                    UpdateStamina(playerStamina.CurrentStamina, playerStamina.MaxStamina);
+                }
+            }
+        }
+
+        private void OnDestroy()
+        {
+            if (playerHealth != null)
+            {
+                playerHealth.OnHealthChanged -= UpdateHealth;
+                playerHealth.OnPlayerDied -= ShowGameOverScreen;
+            }
+
+            if (playerStamina != null)
+            {
+                playerStamina.OnStaminaChanged -= UpdateStamina;
+            }
+        }
 
         public void UpdateHealth(float current, float max)
         {
@@ -38,11 +83,11 @@ namespace ZombieApocalypse.UI
             }
         }
 
-        public void UpdateAmmo(int currentMag, int reserve)
+        public void ShowGameOverScreen()
         {
-            if (ammoText != null)
+            if (gameOverPanel != null)
             {
-                ammoText.text = $"{currentMag} / {reserve}";
+                gameOverPanel.SetActive(true);
             }
         }
 
