@@ -83,6 +83,60 @@ namespace ZombieApocalypse.Player
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Fire"",
+                    ""type"": ""Button"",
+                    ""id"": ""81b26804-d50d-40e9-b570-8777174e1180"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Aim"",
+                    ""type"": ""Value"",
+                    ""id"": ""91b26804-d50d-40e9-b570-8777174e1190"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true
+                },
+                {
+                    ""name"": ""Reload"",
+                    ""type"": ""Button"",
+                    ""id"": ""a1b26804-d50d-40e9-b570-8777174e1200"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Weapon1"",
+                    ""type"": ""Button"",
+                    ""id"": ""b1b26804-d50d-40e9-b570-8777174e1210"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Weapon2"",
+                    ""type"": ""Button"",
+                    ""id"": ""c1b26804-d50d-40e9-b570-8777174e1220"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Weapon3"",
+                    ""type"": ""Button"",
+                    ""id"": ""d1b26804-d50d-40e9-b570-8777174e1230"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -195,6 +249,72 @@ namespace ZombieApocalypse.Player
                     ""action"": ""Attack"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""602919ab-1020-3040-5060-708090001144"",
+                    ""path"": ""<Mouse>/leftButton"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""KeyboardMouse"",
+                    ""action"": ""Fire"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""702919ab-1020-3040-5060-708090001155"",
+                    ""path"": ""<Mouse>/rightButton"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""KeyboardMouse"",
+                    ""action"": ""Aim"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""802919ab-1020-3040-5060-708090001166"",
+                    ""path"": ""<Keyboard>/r"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""KeyboardMouse"",
+                    ""action"": ""Reload"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""902919ab-1020-3040-5060-708090001177"",
+                    ""path"": ""<Keyboard>/1"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""KeyboardMouse"",
+                    ""action"": ""Weapon1"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""a02919ab-1020-3040-5060-708090001188"",
+                    ""path"": ""<Keyboard>/2"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""KeyboardMouse"",
+                    ""action"": ""Weapon2"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""b02919ab-1020-3040-5060-708090001199"",
+                    ""path"": ""<Keyboard>/3"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""KeyboardMouse"",
+                    ""action"": ""Weapon3"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -226,6 +346,12 @@ namespace ZombieApocalypse.Player
             m_Player_Sprint = m_Player.FindAction("Sprint", throwIfNotFound: true);
             m_Player_Crouch = m_Player.FindAction("Crouch", throwIfNotFound: true);
             m_Player_Attack = m_Player.FindAction("Attack", throwIfNotFound: true);
+            m_Player_Fire = m_Player.FindAction("Fire", throwIfNotFound: true);
+            m_Player_Aim = m_Player.FindAction("Aim", throwIfNotFound: true);
+            m_Player_Reload = m_Player.FindAction("Reload", throwIfNotFound: true);
+            m_Player_Weapon1 = m_Player.FindAction("Weapon1", throwIfNotFound: true);
+            m_Player_Weapon2 = m_Player.FindAction("Weapon2", throwIfNotFound: true);
+            m_Player_Weapon3 = m_Player.FindAction("Weapon3", throwIfNotFound: true);
         }
 
         ~@PlayerInputActions()
@@ -298,6 +424,12 @@ namespace ZombieApocalypse.Player
         private readonly InputAction m_Player_Sprint;
         private readonly InputAction m_Player_Crouch;
         private readonly InputAction m_Player_Attack;
+        private readonly InputAction m_Player_Fire;
+        private readonly InputAction m_Player_Aim;
+        private readonly InputAction m_Player_Reload;
+        private readonly InputAction m_Player_Weapon1;
+        private readonly InputAction m_Player_Weapon2;
+        private readonly InputAction m_Player_Weapon3;
 
         public struct PlayerActions
         {
@@ -309,6 +441,12 @@ namespace ZombieApocalypse.Player
             public InputAction @Sprint => m_Wrapper.m_Player_Sprint;
             public InputAction @Crouch => m_Wrapper.m_Player_Crouch;
             public InputAction @Attack => m_Wrapper.m_Player_Attack;
+            public InputAction @Fire => m_Wrapper.m_Player_Fire;
+            public InputAction @Aim => m_Wrapper.m_Player_Aim;
+            public InputAction @Reload => m_Wrapper.m_Player_Reload;
+            public InputAction @Weapon1 => m_Wrapper.m_Player_Weapon1;
+            public InputAction @Weapon2 => m_Wrapper.m_Player_Weapon2;
+            public InputAction @Weapon3 => m_Wrapper.m_Player_Weapon3;
             public InputActionMap Get() { return m_Wrapper.m_Player; }
             public void Enable() { Get().Enable(); }
             public void Disable() { Get().Disable(); }
@@ -336,6 +474,24 @@ namespace ZombieApocalypse.Player
                 @Attack.started += instance.OnAttack;
                 @Attack.performed += instance.OnAttack;
                 @Attack.canceled += instance.OnAttack;
+                @Fire.started += instance.OnFire;
+                @Fire.performed += instance.OnFire;
+                @Fire.canceled += instance.OnFire;
+                @Aim.started += instance.OnAim;
+                @Aim.performed += instance.OnAim;
+                @Aim.canceled += instance.OnAim;
+                @Reload.started += instance.OnReload;
+                @Reload.performed += instance.OnReload;
+                @Reload.canceled += instance.OnReload;
+                @Weapon1.started += instance.OnWeapon1;
+                @Weapon1.performed += instance.OnWeapon1;
+                @Weapon1.canceled += instance.OnWeapon1;
+                @Weapon2.started += instance.OnWeapon2;
+                @Weapon2.performed += instance.OnWeapon2;
+                @Weapon2.canceled += instance.OnWeapon2;
+                @Weapon3.started += instance.OnWeapon3;
+                @Weapon3.performed += instance.OnWeapon3;
+                @Weapon3.canceled += instance.OnWeapon3;
             }
 
             private void UnregisterCallbacks(IPlayerActions instance)
@@ -358,6 +514,24 @@ namespace ZombieApocalypse.Player
                 @Attack.started -= instance.OnAttack;
                 @Attack.performed -= instance.OnAttack;
                 @Attack.canceled -= instance.OnAttack;
+                @Fire.started -= instance.OnFire;
+                @Fire.performed -= instance.OnFire;
+                @Fire.canceled -= instance.OnFire;
+                @Aim.started -= instance.OnAim;
+                @Aim.performed -= instance.OnAim;
+                @Aim.canceled -= instance.OnAim;
+                @Reload.started -= instance.OnReload;
+                @Reload.performed -= instance.OnReload;
+                @Reload.canceled -= instance.OnReload;
+                @Weapon1.started -= instance.OnWeapon1;
+                @Weapon1.performed -= instance.OnWeapon1;
+                @Weapon1.canceled -= instance.OnWeapon1;
+                @Weapon2.started -= instance.OnWeapon2;
+                @Weapon2.performed -= instance.OnWeapon2;
+                @Weapon2.canceled -= instance.OnWeapon2;
+                @Weapon3.started -= instance.OnWeapon3;
+                @Weapon3.performed -= instance.OnWeapon3;
+                @Weapon3.canceled -= instance.OnWeapon3;
             }
 
             public void RemoveCallbacks(IPlayerActions instance)
@@ -385,6 +559,12 @@ namespace ZombieApocalypse.Player
             void OnSprint(InputAction.CallbackContext context);
             void OnCrouch(InputAction.CallbackContext context);
             void OnAttack(InputAction.CallbackContext context);
+            void OnFire(InputAction.CallbackContext context);
+            void OnAim(InputAction.CallbackContext context);
+            void OnReload(InputAction.CallbackContext context);
+            void OnWeapon1(InputAction.CallbackContext context);
+            void OnWeapon2(InputAction.CallbackContext context);
+            void OnWeapon3(InputAction.CallbackContext context);
         }
     }
 }

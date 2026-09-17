@@ -4,7 +4,7 @@ namespace ZombieApocalypse.Player
 {
     /// <summary>
     /// Handles responsive 3rd-person player locomotion, camera-relative movement,
-    /// smooth rotation, crouch height adjustment, jumping, and slope gravity.
+    /// smooth rotation, crouch height adjustment, jumping, slope gravity, and aim direction locking.
     /// Connected to PlayerStamina for sprinting drain.
     /// 
     /// ATTACH TO: Player prefab GameObject containing CharacterController.
@@ -29,7 +29,7 @@ namespace ZombieApocalypse.Player
         [Header("Ground Check")]
         [SerializeField] private Transform groundCheckTransform;
         [SerializeField] private float groundCheckRadius = 0.25f;
-        [SerializeField] private LayerMask groundLayerMask = ~0; // Default all layers
+        [SerializeField] private LayerMask groundLayerMask = ~0;
 
         [Header("Crouching Settings")]
         [SerializeField] private float standingHeight = 1.8f;
@@ -44,6 +44,7 @@ namespace ZombieApocalypse.Player
         private CharacterController characterController;
         private PlayerInputHandler inputHandler;
         private PlayerStamina playerStamina;
+        private PlayerHealth playerHealth;
         private Transform cameraTransform;
 
         // Locomotion States
@@ -53,12 +54,14 @@ namespace ZombieApocalypse.Player
         private bool isGrounded;
         private bool isCrouching;
         private bool isSprinting;
+        private bool isAiming;
 
-        // Public Properties exposed for PlayerAnimation & UI
+        // Public Properties exposed for PlayerAnimation, WeaponController & UI
         public float CurrentSpeed => activeMoveSpeed;
         public bool IsGrounded => isGrounded;
         public bool IsCrouching => isCrouching;
         public bool IsSprinting => isSprinting;
+        public bool IsAiming => isAiming;
         public float VerticalVelocity => verticalVelocity;
 
         private void Awake()
@@ -66,6 +69,7 @@ namespace ZombieApocalypse.Player
             characterController = GetComponent<CharacterController>();
             inputHandler = GetComponent<PlayerInputHandler>();
             playerStamina = GetComponent<PlayerStamina>();
+            playerHealth = GetComponent<PlayerHealth>();
         }
 
         private void Start()
@@ -74,12 +78,7 @@ namespace ZombieApocalypse.Player
             {
                 cameraTransform = Camera.main.transform;
             }
-            else
-            {
-                Debug.LogWarning("[PlayerController] Main Camera not found. Camera-relative movement will default to world axes.");
-            }
 
-            // Fallback for missing input handler
             if (inputHandler == null)
             {
                 inputHandler = gameObject.AddComponent<PlayerInputHandler>();
@@ -88,12 +87,20 @@ namespace ZombieApocalypse.Player
 
         private void Update()
         {
+            // Disable movement logic if player is dead
+            if (playerHealth != null && playerHealth.IsDead)
+            {
+                activeMoveSpeed = 0f;
+                isSprinting = false;
+                isAiming = false;
+                return;
+            }
+
             CheckGroundedState();
             HandleCrouch();
             HandleMovement();
             HandleJumpAndGravity();
 
-            // Apply calculated movement to CharacterController
             Vector3 finalMove = currentVelocity + Vector3.up * verticalVelocity;
             characterController.Move(finalMove * Time.deltaTime);
         }
@@ -122,11 +129,9 @@ namespace ZombieApocalypse.Player
                 isCrouching = !isCrouching;
                 inputHandler.ResetCrouchTrigger();
 
-                // Adjust CharacterController height and center
                 characterController.height = isCrouching ? crouchingHeight : standingHeight;
                 characterController.center = isCrouching ? crouchingCenter : standingCenter;
 
-                // Cancel sprint if crouching
                 if (isCrouching)
                 {
                     isSprinting = false;
@@ -138,8 +143,9 @@ namespace ZombieApocalypse.Player
         {
             Vector2 moveInput = inputHandler != null ? inputHandler.MoveInput : Vector2.zero;
             bool wantsToSprint = inputHandler != null && inputHandler.SprintHeld;
+            isAiming = inputHandler != null && inputHandler.AimHeld;
 
-            // Determine Target Speed & Sprint Stamina Drain
+            // Determine Target Speed
             float targetSpeed = 0f;
 
             if (moveInput.magnitude > 0.1f)
@@ -149,9 +155,14 @@ namespace ZombieApocalypse.Player
                     targetSpeed = crouchSpeed;
                     isSprinting = false;
                 }
+                else if (isAiming)
+                {
+                    // Slow down locomotion while aiming
+                    targetSpeed = walkSpeed;
+                    isSprinting = false;
+                }
                 else if (wantsToSprint)
                 {
-                    // Check if player has stamina to sprint
                     if (playerStamina != null && playerStamina.HasStamina)
                     {
                         bool consumed = playerStamina.ConsumeStamina(sprintStaminaCostPerSecond * Time.deltaTime);
@@ -168,7 +179,6 @@ namespace ZombieApocalypse.Player
                     }
                     else
                     {
-                        // No stamina or no stamina system attached
                         targetSpeed = playerStamina == null ? sprintSpeed : runSpeed;
                         isSprinting = playerStamina == null;
                     }
@@ -189,7 +199,7 @@ namespace ZombieApocalypse.Player
             float accelRate = (targetSpeed > activeMoveSpeed) ? acceleration : deceleration;
             activeMoveSpeed = Mathf.MoveTowards(activeMoveSpeed, targetSpeed, accelRate * Time.deltaTime);
 
-            // Calculate Camera-Relative Direction
+            // Calculate Camera-Relative Movement Direction
             Vector3 forward = cameraTransform != null ? cameraTransform.forward : Vector3.forward;
             Vector3 right = cameraTransform != null ? cameraTransform.right : Vector3.right;
 
@@ -199,13 +209,23 @@ namespace ZombieApocalypse.Player
             right.Normalize();
 
             Vector3 targetMoveDir = (forward * moveInput.y + right * moveInput.x).normalized;
-
-            // Calculate movement velocity vector
             currentVelocity = targetMoveDir * activeMoveSpeed;
 
-            // Smooth Character Rotation towards movement direction
-            if (targetMoveDir.sqrMagnitude > 0.01f)
+            // Character Rotation Handling
+            if (isAiming && cameraTransform != null)
             {
+                // When aiming, align player rotation directly to camera look direction
+                Vector3 cameraLookDir = cameraTransform.forward;
+                cameraLookDir.y = 0f;
+                if (cameraLookDir.sqrMagnitude > 0.01f)
+                {
+                    Quaternion aimRotation = Quaternion.LookRotation(cameraLookDir);
+                    transform.rotation = Quaternion.Slerp(transform.rotation, aimRotation, rotationSpeed * 1.5f * Time.deltaTime);
+                }
+            }
+            else if (targetMoveDir.sqrMagnitude > 0.01f)
+            {
+                // Normal locomotion rotation towards movement vector
                 Quaternion targetRotation = Quaternion.LookRotation(targetMoveDir);
                 transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
             }
@@ -215,16 +235,14 @@ namespace ZombieApocalypse.Player
         {
             if (inputHandler != null && inputHandler.JumpTriggered)
             {
-                if (isGrounded && !isCrouching)
+                if (isGrounded && !isCrouching && !isAiming)
                 {
-                    // v = sqrt(2 * g * h)
                     verticalVelocity = Mathf.Sqrt(jumpHeight * -2f * gravity);
                     isGrounded = false;
                 }
                 inputHandler.ResetJumpTrigger();
             }
 
-            // Apply gravity over time
             verticalVelocity += gravity * Time.deltaTime;
         }
 

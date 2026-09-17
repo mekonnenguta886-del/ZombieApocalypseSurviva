@@ -4,8 +4,8 @@ using UnityEngine.InputSystem;
 namespace ZombieApocalypse.Player
 {
     /// <summary>
-    /// Uses the auto-generated PlayerInputActions wrapper class from PlayerInputActions.inputactions.
-    /// Manages action map enable/disable lifecycle and exposes input getters for PlayerController and PlayerCombat.
+    /// Reads inputs from PlayerInputActions wrapper.
+    /// Exposes movement, aiming, firing, reloading, and weapon selection properties.
     /// 
     /// ATTACH TO: Player prefab GameObject.
     /// </summary>
@@ -21,6 +21,13 @@ namespace ZombieApocalypse.Player
         public bool SprintHeld { get; private set; }
         public bool CrouchTriggered { get; private set; }
         public bool AttackTriggered { get; private set; }
+        public bool FireHeld { get; private set; }
+        public bool FireTriggered { get; private set; }
+        public bool AimHeld { get; private set; }
+        public bool ReloadTriggered { get; private set; }
+        public bool Weapon1Triggered { get; private set; }
+        public bool Weapon2Triggered { get; private set; }
+        public bool Weapon3Triggered { get; private set; }
 
         [Header("Cursor Settings")]
         [SerializeField] private bool lockCursor = true;
@@ -72,37 +79,33 @@ namespace ZombieApocalypse.Player
             MoveInput = inputActions.Player.Move.ReadValue<Vector2>();
             LookInput = inputActions.Player.Look.ReadValue<Vector2>();
 
-            if (inputActions.Player.Jump.wasPressedThisFrame)
-            {
-                JumpTriggered = true;
-            }
-
+            if (inputActions.Player.Jump.wasPressedThisFrame) JumpTriggered = true;
             SprintHeld = inputActions.Player.Sprint.IsPressed();
+            if (inputActions.Player.Crouch.wasPressedThisFrame) CrouchTriggered = true;
+            if (inputActions.Player.Attack.wasPressedThisFrame) AttackTriggered = true;
 
-            if (inputActions.Player.Crouch.wasPressedThisFrame)
-            {
-                CrouchTriggered = true;
-            }
+            // Ranged weapon controls
+            FireHeld = inputActions.Player.Fire.IsPressed();
+            if (inputActions.Player.Fire.wasPressedThisFrame) FireTriggered = true;
+            AimHeld = inputActions.Player.Aim.IsPressed();
+            if (inputActions.Player.Reload.wasPressedThisFrame) ReloadTriggered = true;
 
-            if (inputActions.Player.Attack.wasPressedThisFrame)
-            {
-                AttackTriggered = true;
-            }
+            // Weapon slot triggers
+            if (inputActions.Player.Weapon1.wasPressedThisFrame) Weapon1Triggered = true;
+            if (inputActions.Player.Weapon2.wasPressedThisFrame) Weapon2Triggered = true;
+            if (inputActions.Player.Weapon3.wasPressedThisFrame) Weapon3Triggered = true;
         }
 
-        public void ResetJumpTrigger()
+        public void ResetJumpTrigger() => JumpTriggered = false;
+        public void ResetCrouchTrigger() => CrouchTriggered = false;
+        public void ResetAttackTrigger() => AttackTriggered = false;
+        public void ResetFireTrigger() => FireTriggered = false;
+        public void ResetReloadTrigger() => ReloadTriggered = false;
+        public void ResetWeaponTriggers()
         {
-            JumpTriggered = false;
-        }
-
-        public void ResetCrouchTrigger()
-        {
-            CrouchTriggered = false;
-        }
-
-        public void ResetAttackTrigger()
-        {
-            AttackTriggered = false;
+            Weapon1Triggered = false;
+            Weapon2Triggered = false;
+            Weapon3Triggered = false;
         }
     }
 }

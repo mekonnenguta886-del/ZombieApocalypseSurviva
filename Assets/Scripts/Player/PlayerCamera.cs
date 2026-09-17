@@ -3,22 +3,26 @@ using UnityEngine;
 namespace ZombieApocalypse.Player
 {
     /// <summary>
-    /// Professional 3rd-person camera controller designed for Cinemachine integration or standalone smooth orbit.
-    /// Drives smooth pitch/yaw rotation around CameraTarget with obstruction raycasting and pitch clamping.
-    /// Prepared for future aiming, recoil, zoom, and camera state transitions.
+    /// Extended 3rd-person camera controller supporting over-the-shoulder Aim mode,
+    /// smooth FOV zoom, shoulder offset, camera recoil kick, and obstruction raycasting.
     /// 
-    /// ATTACH TO: Main Camera GameObject or Cinemachine Camera Rig.
+    /// ATTACH TO: Main Camera GameObject.
     /// </summary>
     public class PlayerCamera : MonoBehaviour
     {
         [Header("Target Tracking")]
         [SerializeField] private Transform targetTransform;
-        [SerializeField] private Vector3 targetOffset = new Vector3(0f, 1.5f, 0f);
+        [SerializeField] private Vector3 normalTargetOffset = new Vector3(0f, 1.5f, 0f);
+        [SerializeField] private Vector3 aimTargetOffset = new Vector3(0.5f, 1.5f, 0f);
 
-        [Header("Camera Orbit Limits")]
-        [SerializeField] private float defaultDistance = 3.5f;
-        [SerializeField] private float minDistance = 1.0f;
-        [SerializeField] private float maxDistance = 6.0f;
+        [Header("Distance & FOV")]
+        [SerializeField] private float normalDistance = 3.5f;
+        [SerializeField] private float aimDistance = 1.8f;
+        [SerializeField] private float normalFOV = 60f;
+        [SerializeField] private float aimFOV = 45f;
+        [SerializeField] private float aimTransitionSpeed = 10f;
+
+        [Header("Rotation Limits")]
         [SerializeField] private float minPitch = -30f;
         [SerializeField] private float maxPitch = 70f;
 
@@ -32,19 +36,29 @@ namespace ZombieApocalypse.Player
         [SerializeField] private float collisionRadius = 0.25f;
         [SerializeField] private LayerMask collisionLayers = ~0;
 
+        // Internal State
+        private Camera mainCamera;
         private float yaw;
         private float pitch;
+        private float recoilPitch;
         private float currentDistance;
+        private bool isAiming;
         private Vector3 currentRotationVelocity;
         private Vector3 currentPositionVelocity;
         private Vector3 targetRotation;
         private Vector3 currentRotation;
 
         public Transform TargetTransform => targetTransform;
+        public bool IsAiming => isAiming;
+
+        private void Awake()
+        {
+            mainCamera = GetComponent<Camera>();
+        }
 
         private void Start()
         {
-            currentDistance = defaultDistance;
+            currentDistance = normalDistance;
 
             if (targetTransform == null)
             {
@@ -66,6 +80,7 @@ namespace ZombieApocalypse.Player
             if (targetTransform == null) return;
 
             HandleInput();
+            UpdateAimMode();
             UpdateCameraPositionAndRotation();
         }
 
@@ -76,36 +91,68 @@ namespace ZombieApocalypse.Player
             Vector2 lookInput = PlayerInputHandler.Instance.LookInput;
             yaw += lookInput.x * mouseSensitivity;
             pitch -= lookInput.y * mouseSensitivity;
-            pitch = Mathf.Clamp(pitch, minPitch, maxPitch);
+
+            // Apply recoil recovery
+            if (recoilPitch > 0.01f)
+            {
+                float recoilRecover = recoilPitch * 10f * Time.deltaTime;
+                recoilPitch -= recoilRecover;
+            }
+
+            pitch = Mathf.Clamp(pitch - recoilPitch, minPitch, maxPitch);
+
+            // Read Aim state from InputHandler
+            isAiming = PlayerInputHandler.Instance.AimHeld;
+        }
+
+        private void UpdateAimMode()
+        {
+            if (mainCamera != null)
+            {
+                float targetFOV = isAiming ? aimFOV : normalFOV;
+                mainCamera.fieldOfView = Mathf.Lerp(mainCamera.fieldOfView, targetFOV, Time.deltaTime * aimTransitionSpeed);
+            }
         }
 
         private void UpdateCameraPositionAndRotation()
         {
-            // Smooth rotation interpolation
+            // Smooth Rotation
             targetRotation = new Vector3(pitch, yaw, 0f);
             currentRotation = Vector3.SmoothDamp(currentRotation, targetRotation, ref currentRotationVelocity, rotationSmoothTime);
             transform.eulerAngles = currentRotation;
 
-            // Calculate pivot position
-            Vector3 targetCenter = targetTransform.position + targetOffset;
-            Quaternion rotation = Quaternion.Euler(currentRotation);
-            Vector3 desiredCameraPos = targetCenter - (rotation * Vector3.forward * defaultDistance);
+            // Determine Target Position with Shoulder Offset
+            Vector3 offset = isAiming ? aimTargetOffset : normalTargetOffset;
+            Vector3 targetCenter = targetTransform.position + targetTransform.TransformDirection(offset);
 
-            // Obstruction raycast cast
-            float finalDistance = defaultDistance;
+            float desiredDist = isAiming ? aimDistance : normalDistance;
+            Quaternion rotation = Quaternion.Euler(currentRotation);
+            Vector3 desiredCameraPos = targetCenter - (rotation * Vector3.forward * desiredDist);
+
+            // Collision check
+            float finalDistance = desiredDist;
             if (enableCollisionCheck)
             {
                 Vector3 rayDirection = desiredCameraPos - targetCenter;
-                if (Physics.SphereCast(targetCenter, collisionRadius, rayDirection.normalized, out RaycastHit hit, defaultDistance, collisionLayers, QueryTriggerInteraction.Ignore))
+                if (Physics.SphereCast(targetCenter, collisionRadius, rayDirection.normalized, out RaycastHit hit, desiredDist, collisionLayers, QueryTriggerInteraction.Ignore))
                 {
-                    finalDistance = Mathf.Clamp(hit.distance - collisionRadius, minDistance, maxDistance);
+                    finalDistance = Mathf.Clamp(hit.distance - collisionRadius, 0.8f, desiredDist);
                 }
             }
 
-            currentDistance = Mathf.Lerp(currentDistance, finalDistance, Time.deltaTime * 15f);
+            currentDistance = Mathf.Lerp(currentDistance, finalDistance, Time.deltaTime * aimTransitionSpeed);
             Vector3 finalCameraPos = targetCenter - (rotation * Vector3.forward * currentDistance);
 
             transform.position = Vector3.SmoothDamp(transform.position, finalCameraPos, ref currentPositionVelocity, positionSmoothTime);
+        }
+
+        /// <summary>
+        /// Applies vertical camera recoil kick on firing.
+        /// </summary>
+        public void ApplyRecoil(float recoilAmount)
+        {
+            pitch -= recoilAmount;
+            pitch = Mathf.Clamp(pitch, minPitch, maxPitch);
         }
 
         public void SetTarget(Transform newTarget)
