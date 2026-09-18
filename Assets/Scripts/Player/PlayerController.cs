@@ -1,11 +1,12 @@
 using UnityEngine;
+using ZombieApocalypse.Inventory;
 
 namespace ZombieApocalypse.Player
 {
     /// <summary>
     /// Handles responsive 3rd-person player locomotion, camera-relative movement,
     /// smooth rotation, crouch height adjustment, jumping, slope gravity, and aim direction locking.
-    /// Connected to PlayerStamina for sprinting drain.
+    /// Connected to PlayerStamina for sprinting drain. Auto-ensures survival and inventory components.
     /// 
     /// ATTACH TO: Player prefab GameObject containing CharacterController.
     /// </summary>
@@ -70,6 +71,11 @@ namespace ZombieApocalypse.Player
             inputHandler = GetComponent<PlayerInputHandler>();
             playerStamina = GetComponent<PlayerStamina>();
             playerHealth = GetComponent<PlayerHealth>();
+
+            // Auto-ensure Phase 5 survival & inventory components exist on Player GameObject
+            if (GetComponent<InventorySystem>() == null) gameObject.AddComponent<InventorySystem>();
+            if (GetComponent<PlayerSurvivalStats>() == null) gameObject.AddComponent<PlayerSurvivalStats>();
+            if (GetComponent<PlayerInteraction>() == null) gameObject.AddComponent<PlayerInteraction>();
         }
 
         private void Start()

@@ -14,6 +14,7 @@ namespace ZombieApocalypse.Zombies
     {
         public event Action<float, float> OnHealthChanged; // Current, Max
         public event Action OnZombieDied;
+        public static event Action<ZombieHealth> OnZombieKilled;
 
         [Header("Zombie Data Config")]
         [SerializeField] private ZombieData zombieData;
@@ -72,6 +73,7 @@ namespace ZombieApocalypse.Zombies
             isDead = true;
 
             OnZombieDied?.Invoke();
+            OnZombieKilled?.Invoke(this);
 
             // Disable physics collider to prevent blocking movement or accepting further hit detection
             if (zombieCollider != null)

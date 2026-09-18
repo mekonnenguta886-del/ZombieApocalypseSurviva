@@ -57,5 +57,16 @@ namespace ZombieApocalypse.Player
             currentHealth = Mathf.Clamp(currentHealth + amount, 0f, maxHealth);
             OnHealthChanged?.Invoke(currentHealth, maxHealth);
         }
+
+        /// <summary>
+        /// Restores saved player health cleanly without damage FX, healing popups, or death callbacks.
+        /// </summary>
+        public void RestoreHealth(float health)
+        {
+            currentHealth = Mathf.Clamp(health, 0f, maxHealth);
+            isDead = currentHealth <= 0f;
+            OnHealthChanged?.Invoke(currentHealth, maxHealth);
+            Debug.Log($"[PlayerHealth] Restored health from save: {currentHealth}/{maxHealth}");
+        }
     }
 }

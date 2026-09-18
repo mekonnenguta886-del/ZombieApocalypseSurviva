@@ -1,14 +1,15 @@
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using ZombieApocalypse.Inventory;
 using ZombieApocalypse.Player;
 using ZombieApocalypse.Weapons;
 
 namespace ZombieApocalypse.UI
 {
     /// <summary>
-    /// Updates all HUD UI elements (Health bar, Stamina bar, Weapon name, Ammo count, Crosshair, Death overlay).
-    /// Binds automatically to PlayerHealth, PlayerStamina, and WeaponController events.
+    /// Updates all HUD UI elements (Health bar, Stamina bar, Hunger bar, Thirst bar, Weapon name, Ammo count,
+    /// Crosshair, Interaction prompt, Notification toasts, Low survival warnings, Death overlay).
     /// 
     /// ATTACH TO: Gameplay Canvas HUD Root GameObject.
     /// </summary>
@@ -18,25 +19,42 @@ namespace ZombieApocalypse.UI
         [SerializeField] private Slider healthBarSlider;
         [SerializeField] private Slider staminaBarSlider;
 
+        [Header("Survival UI (Hunger & Thirst)")]
+        [SerializeField] private Slider hungerBarSlider;
+        [SerializeField] private Slider thirstBarSlider;
+        [SerializeField] private TextMeshProUGUI lowSurvivalWarningText;
+
         [Header("Weapon & Ammo UI")]
         [SerializeField] private TextMeshProUGUI weaponNameText;
         [SerializeField] private TextMeshProUGUI ammoText;
         [SerializeField] private GameObject crosshairOverlay;
 
+        [Header("Interaction & Pickup Feedback")]
+        [SerializeField] private TextMeshProUGUI interactionPromptText;
+        [SerializeField] private TextMeshProUGUI notificationToastText;
+
         [Header("Overlay Panels")]
         [SerializeField] private GameObject gameOverPanel;
         [SerializeField] private TextMeshProUGUI objectiveText;
 
+        // Player References
         private PlayerHealth playerHealth;
         private PlayerStamina playerStamina;
+        private PlayerSurvivalStats survivalStats;
         private PlayerController playerController;
         private WeaponController weaponController;
+        private PlayerInteraction playerInteraction;
+        private InventorySystem inventorySystem;
+
+        private float toastDisplayTimer;
 
         private void Start()
         {
             FindAndBindPlayer();
             if (gameOverPanel != null) gameOverPanel.SetActive(false);
             if (crosshairOverlay != null) crosshairOverlay.SetActive(false);
+            if (lowSurvivalWarningText != null) lowSurvivalWarningText.gameObject.SetActive(false);
+            if (notificationToastText != null) notificationToastText.gameObject.SetActive(false);
         }
 
         public void FindAndBindPlayer()
@@ -46,8 +64,11 @@ namespace ZombieApocalypse.UI
             {
                 playerHealth = playerObj.GetComponent<PlayerHealth>();
                 playerStamina = playerObj.GetComponent<PlayerStamina>();
+                survivalStats = playerObj.GetComponent<PlayerSurvivalStats>();
                 playerController = playerObj.GetComponent<PlayerController>();
                 weaponController = playerObj.GetComponent<WeaponController>();
+                playerInteraction = playerObj.GetComponent<PlayerInteraction>();
+                inventorySystem = playerObj.GetComponent<InventorySystem>();
 
                 if (playerHealth != null)
                 {
@@ -62,6 +83,13 @@ namespace ZombieApocalypse.UI
                     UpdateStamina(playerStamina.CurrentStamina, playerStamina.MaxStamina);
                 }
 
+                if (survivalStats != null)
+                {
+                    survivalStats.OnSurvivalStatsChanged += UpdateSurvivalStats;
+                    survivalStats.OnLowSurvivalWarning += ShowLowSurvivalWarning;
+                    UpdateSurvivalStats(survivalStats.CurrentHunger, survivalStats.MaxHunger, survivalStats.CurrentThirst, survivalStats.MaxThirst);
+                }
+
                 if (weaponController != null)
                 {
                     weaponController.OnWeaponStateChanged += UpdateWeaponHUD;
@@ -69,6 +97,17 @@ namespace ZombieApocalypse.UI
                     {
                         UpdateWeaponHUD(weaponController.CurrentSlot.currentMagazineAmmo, weaponController.CurrentSlot.reserveAmmo, weaponController.CurrentWeapon.weaponName, weaponController.IsReloading, false);
                     }
+                }
+
+                if (playerInteraction != null)
+                {
+                    playerInteraction.OnInteractionPromptChanged += UpdateInteractionPrompt;
+                    UpdateInteractionPrompt(playerInteraction.ActivePrompt);
+                }
+
+                if (inventorySystem != null)
+                {
+                    inventorySystem.OnInventoryNotification += ShowNotificationToast;
                 }
             }
         }
@@ -79,6 +118,16 @@ namespace ZombieApocalypse.UI
             if (playerController != null && crosshairOverlay != null)
             {
                 crosshairOverlay.SetActive(playerController.IsAiming);
+            }
+
+            // Hide toast after timer expires
+            if (toastDisplayTimer > 0f)
+            {
+                toastDisplayTimer -= Time.deltaTime;
+                if (toastDisplayTimer <= 0f && notificationToastText != null)
+                {
+                    notificationToastText.gameObject.SetActive(false);
+                }
             }
         }
 
@@ -95,9 +144,25 @@ namespace ZombieApocalypse.UI
                 playerStamina.OnStaminaChanged -= UpdateStamina;
             }
 
+            if (survivalStats != null)
+            {
+                survivalStats.OnSurvivalStatsChanged -= UpdateSurvivalStats;
+                survivalStats.OnLowSurvivalWarning -= ShowLowSurvivalWarning;
+            }
+
             if (weaponController != null)
             {
                 weaponController.OnWeaponStateChanged -= UpdateWeaponHUD;
+            }
+
+            if (playerInteraction != null)
+            {
+                playerInteraction.OnInteractionPromptChanged -= UpdateInteractionPrompt;
+            }
+
+            if (inventorySystem != null)
+            {
+                inventorySystem.OnInventoryNotification -= ShowNotificationToast;
             }
         }
 
@@ -114,6 +179,19 @@ namespace ZombieApocalypse.UI
             if (staminaBarSlider != null)
             {
                 staminaBarSlider.value = Mathf.Clamp01(current / max);
+            }
+        }
+
+        public void UpdateSurvivalStats(float hunger, float maxHunger, float thirst, float maxThirst)
+        {
+            if (hungerBarSlider != null)
+            {
+                hungerBarSlider.value = Mathf.Clamp01(hunger / maxHunger);
+            }
+
+            if (thirstBarSlider != null)
+            {
+                thirstBarSlider.value = Mathf.Clamp01(thirst / maxThirst);
             }
         }
 
@@ -141,6 +219,43 @@ namespace ZombieApocalypse.UI
             }
         }
 
+        public void UpdateInteractionPrompt(string promptText)
+        {
+            if (interactionPromptText != null)
+            {
+                interactionPromptText.text = promptText;
+                interactionPromptText.gameObject.SetActive(!string.IsNullOrEmpty(promptText));
+            }
+        }
+
+        public void ShowNotificationToast(string message)
+        {
+            if (notificationToastText != null)
+            {
+                notificationToastText.text = message;
+                notificationToastText.gameObject.SetActive(true);
+                toastDisplayTimer = 2.5f;
+            }
+        }
+
+        public void ShowLowSurvivalWarning(string warningMessage)
+        {
+            if (lowSurvivalWarningText != null)
+            {
+                lowSurvivalWarningText.text = warningMessage;
+                lowSurvivalWarningText.gameObject.SetActive(true);
+                Invoke(nameof(HideLowSurvivalWarning), 3.5f);
+            }
+        }
+
+        private void HideLowSurvivalWarning()
+        {
+            if (lowSurvivalWarningText != null)
+            {
+                lowSurvivalWarningText.gameObject.SetActive(false);
+            }
+        }
+
         public void ShowGameOverScreen()
         {
             if (gameOverPanel != null)
@@ -150,6 +265,10 @@ namespace ZombieApocalypse.UI
             if (crosshairOverlay != null)
             {
                 crosshairOverlay.SetActive(false);
+            }
+            if (interactionPromptText != null)
+            {
+                interactionPromptText.gameObject.SetActive(false);
             }
         }
 

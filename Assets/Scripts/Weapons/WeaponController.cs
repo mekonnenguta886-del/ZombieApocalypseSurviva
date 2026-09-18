@@ -98,7 +98,7 @@ namespace ZombieApocalypse.Weapons
 
         private void Update()
         {
-            // Player Death Safety Guard: Instantly stop weapon actions, cancel reloading, and stop coroutines
+            // Player Death Safety Guard: Instantly stop weapon actions, cancel reloading
             if (playerHealth != null && playerHealth.IsDead)
             {
                 if (isReloading)
@@ -107,6 +107,12 @@ namespace ZombieApocalypse.Weapons
                     StopAllCoroutines();
                     NotifyHUD();
                 }
+                return;
+            }
+
+            // Inventory Open Guard: Block weapon switching, reloading, and firing while managing inventory UI
+            if (inputHandler != null && inputHandler.IsInventoryOpen)
+            {
                 return;
             }
 
@@ -323,6 +329,101 @@ namespace ZombieApocalypse.Weapons
 
             bool isEmpty = CurrentSlot.currentMagazineAmmo <= 0 && CurrentSlot.reserveAmmo <= 0;
             OnWeaponStateChanged?.Invoke(CurrentSlot.currentMagazineAmmo, CurrentSlot.reserveAmmo, CurrentWeapon.weaponName, isReloading, isEmpty);
+        }
+
+        /// <summary>
+        /// Replenishes reserve ammo for the weapon matching the specified AmmoType without resetting current magazine ammo.
+        /// </summary>
+        public bool AddReserveAmmo(ZombieApocalypse.Inventory.AmmoType ammoType, int amount)
+        {
+            if (amount <= 0) return false;
+
+            foreach (var slot in weaponSlots)
+            {
+                if (slot != null && slot.weaponData != null)
+                {
+                    bool match = false;
+                    string nameLower = slot.weaponData.weaponName.ToLower();
+
+                    if (ammoType == ZombieApocalypse.Inventory.AmmoType.Pistol && nameLower.Contains("pistol")) match = true;
+                    else if (ammoType == ZombieApocalypse.Inventory.AmmoType.Shotgun && nameLower.Contains("shotgun")) match = true;
+                    else if (ammoType == ZombieApocalypse.Inventory.AmmoType.Rifle && (nameLower.Contains("rifle") || nameLower.Contains("assault"))) match = true;
+
+                    if (match)
+                    {
+                        slot.reserveAmmo += amount;
+                        NotifyHUD();
+                        Debug.Log($"[WeaponController] Added {amount} reserve ammo for {slot.weaponData.weaponName}. New Reserve: {slot.reserveAmmo}");
+                        return true;
+                    }
+                }
+            }
+
+            // Fallback by slot index if name check did not match
+            int targetIndex = ammoType == ZombieApocalypse.Inventory.AmmoType.Pistol ? 0 : ammoType == ZombieApocalypse.Inventory.AmmoType.Shotgun ? 1 : ammoType == ZombieApocalypse.Inventory.AmmoType.Rifle ? 2 : -1;
+            if (targetIndex >= 0 && targetIndex < weaponSlots.Count)
+            {
+                weaponSlots[targetIndex].reserveAmmo += amount;
+                NotifyHUD();
+                Debug.Log($"[WeaponController] Added {amount} reserve ammo to slot {targetIndex}. New Reserve: {weaponSlots[targetIndex].reserveAmmo}");
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Compiles equipped weapon slots into serializable WeaponSaveData DTO.
+        /// </summary>
+        public ZombieApocalypse.Save.WeaponSaveData GetWeaponSaveData()
+        {
+            var saveData = new ZombieApocalypse.Save.WeaponSaveData();
+            saveData.currentSlotIndex = currentSlotIndex;
+
+            foreach (var slot in weaponSlots)
+            {
+                if (slot != null && slot.weaponData != null)
+                {
+                    saveData.slots.Add(new ZombieApocalypse.Save.WeaponSlotSaveData
+                    {
+                        weaponName = slot.weaponData.weaponName,
+                        currentMagazineAmmo = slot.currentMagazineAmmo,
+                        reserveAmmo = slot.reserveAmmo
+                    });
+                }
+            }
+
+            return saveData;
+        }
+
+        /// <summary>
+        /// Restores magazine ammo, reserve ammo, and active weapon slot without triggering firing, reloading coroutines, or audio.
+        /// </summary>
+        public void RestoreWeaponState(int activeSlotIndex, List<ZombieApocalypse.Save.WeaponSlotSaveData> savedSlots)
+        {
+            if (savedSlots != null)
+            {
+                for (int i = 0; i < savedSlots.Count && i < weaponSlots.Count; i++)
+                {
+                    var saved = savedSlots[i];
+                    var runtime = weaponSlots[i];
+
+                    if (saved != null && runtime != null)
+                    {
+                        runtime.currentMagazineAmmo = saved.currentMagazineAmmo;
+                        runtime.reserveAmmo = saved.reserveAmmo;
+                    }
+                }
+            }
+
+            if (activeSlotIndex >= 0 && activeSlotIndex < weaponSlots.Count)
+            {
+                currentSlotIndex = activeSlotIndex;
+            }
+
+            isReloading = false;
+            NotifyHUD();
+            Debug.Log($"[WeaponController] Restored weapon states. Active slot: {currentSlotIndex}");
         }
     }
 }
