@@ -283,8 +283,21 @@ namespace ZombieApocalypse.WorldEvents
                 }
             }
 
+            // Boss Encounter Special Check: Explicitly wait until Boss Zombie is eliminated
+            if (activeEventData.eventType == WorldEventType.BossEncounter)
+            {
+                while (activeBossZombie != null && !activeBossZombie.IsDead)
+                {
+                    if (currentState != WorldEventState.Active && currentState != WorldEventState.WaveDelay)
+                    {
+                        yield break;
+                    }
+                    yield return new WaitForSeconds(0.5f);
+                }
+            }
+
             // All waves spawned and cleared
-            if (activeEventData.completionMode == WorldEventCompletionMode.ClearAllWaves)
+            if (activeEventData.completionMode == WorldEventCompletionMode.ClearAllWaves || activeEventData.eventType == WorldEventType.BossEncounter)
             {
                 CompleteEvent();
             }

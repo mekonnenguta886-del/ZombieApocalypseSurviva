@@ -70,11 +70,23 @@ namespace ZombieApocalypse.AI
         private float lastGroundSlamTime;
         private int currentWaypointIndex = 0;
         private bool isWaitingAtPatrolPoint = false;
+        private bool hasEnteredRageState = false;
 
         public AIState CurrentState => currentState;
 
-        public bool IsRaging => zombieData != null && zombieData.isBoss && zombieData.enableRageState
-            && zombieHealth != null && zombieHealth.HealthPercentage <= zombieData.rageHealthThreshold;
+        public bool IsRaging
+        {
+            get
+            {
+                if (!hasEnteredRageState && zombieData != null && zombieData.isBoss && zombieData.enableRageState
+                    && zombieHealth != null && zombieHealth.HealthPercentage <= zombieData.rageHealthThreshold)
+                {
+                    hasEnteredRageState = true;
+                    Debug.Log($"[ZombieAI] Boss {gameObject.name} ENTERED RAGE STATE!");
+                }
+                return hasEnteredRageState;
+            }
+        }
 
         public float GetRuntimeMoveSpeed()
         {
@@ -305,6 +317,7 @@ namespace ZombieApocalypse.AI
                         && Time.time >= lastGroundSlamTime + zombieData.groundSlamCooldown
                         && distanceToPlayer <= zombieData.groundSlamRadius)
                     {
+                        lastAttackTime = Time.time;
                         ExecuteGroundSlam();
                         return;
                     }
