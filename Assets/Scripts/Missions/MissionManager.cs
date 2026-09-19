@@ -109,16 +109,37 @@ namespace ZombieApocalypse.Missions
         {
             LocationTrigger.OnLocationEntered += HandleLocationEntered;
             ZombieHealth.OnZombieKilled += HandleZombieKilled;
+            ZombieApocalypse.WorldEvents.WorldEventManager.OnWorldEventCompleted += HandleWorldEventCompleted;
         }
 
         private void OnDisable()
         {
             LocationTrigger.OnLocationEntered -= HandleLocationEntered;
             ZombieHealth.OnZombieKilled -= HandleZombieKilled;
+            ZombieApocalypse.WorldEvents.WorldEventManager.OnWorldEventCompleted -= HandleWorldEventCompleted;
 
             if (playerInventory != null)
             {
                 playerInventory.OnItemAdded -= HandleItemAdded;
+            }
+        }
+
+        private void HandleWorldEventCompleted(ZombieApocalypse.WorldEvents.WorldEventData eventData)
+        {
+            if (isMissionComplete || activeMissionData == null) return;
+            if (playerHealth != null && playerHealth.IsDead) return;
+
+            foreach (var obj in runtimeObjectives)
+            {
+                if (obj == null || obj.IsCompleted) continue;
+
+                if (obj.type == ObjectiveType.SurviveHorde)
+                {
+                    obj.currentAmount = obj.requiredAmount;
+                    OnObjectiveUpdated?.Invoke(activeMissionData, obj);
+                    CompleteObjective(obj);
+                    break;
+                }
             }
         }
 

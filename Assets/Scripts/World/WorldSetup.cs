@@ -44,6 +44,12 @@ namespace ZombieApocalypse.World
                 GameObject diffObj = new GameObject("[DifficultyManager]");
                 diffObj.AddComponent<DifficultyManager>();
             }
+
+            if (ZombieApocalypse.WorldEvents.WorldEventManager.Instance == null && FindObjectOfType<ZombieApocalypse.WorldEvents.WorldEventManager>() == null)
+            {
+                GameObject wemObj = new GameObject("[WorldEventManager]");
+                wemObj.AddComponent<ZombieApocalypse.WorldEvents.WorldEventManager>();
+            }
         }
 
         private void LoadDefaultItemData()
@@ -113,6 +119,11 @@ namespace ZombieApocalypse.World
             // 5. Zombie Zone (Position: 40, 0, 35)
             CreateLocationZone(worldRoot.transform, "ZombieZone", new Vector3(40f, 0f, 35f), new Vector3(20f, 2f, 20f), "ZOMBIE INFESTED ZONE", "loc_zombie_zone", new Color(0.9f, 0.2f, 0.2f), out GameObject zombieZoneObj);
             RepositionZombieSpawner(zombieZoneObj.transform.position);
+
+            if (zombieZoneObj != null && zombieZoneObj.GetComponent<ZombieApocalypse.WorldEvents.WorldEventTrigger>() == null)
+            {
+                zombieZoneObj.AddComponent<ZombieApocalypse.WorldEvents.WorldEventTrigger>();
+            }
 
             // 6. Extraction Zone (Position: -30, 0, 35)
             CreateLocationZone(worldRoot.transform, "ExtractionZone", new Vector3(-30f, 0f, 35f), new Vector3(12f, 2f, 12f), "EXTRACTION POINT", "loc_extraction", new Color(0.3f, 0.9f, 0.8f), out GameObject extractObj);

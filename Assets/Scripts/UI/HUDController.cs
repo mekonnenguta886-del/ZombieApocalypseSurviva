@@ -307,5 +307,26 @@ namespace ZombieApocalypse.UI
             Vector3 dir = (originPos - playerPos).normalized;
             Debug.Log($"[HUDController] Directional Damage Indicator triggered from origin {originPos} (Direction: {dir})");
         }
+
+        public void SetWorldEventHUD(string title, int waveCurrent, int waveMax, int zombiesRemaining, float timeRemaining)
+        {
+            if (notificationToastText != null)
+            {
+                int min = Mathf.FloorToInt(timeRemaining / 60f);
+                int sec = Mathf.FloorToInt(timeRemaining % 60f);
+                string text = $"<color=orange><b>{title.ToUpper()}</b></color>\nWave: {waveCurrent}/{waveMax} | Zombies: {zombiesRemaining} | Time: {min:D2}:{sec:D2}";
+                notificationToastText.text = text;
+                notificationToastText.gameObject.SetActive(true);
+                toastDisplayTimer = 1.0f;
+            }
+        }
+
+        public void HideWorldEventHUD()
+        {
+            if (notificationToastText != null)
+            {
+                notificationToastText.gameObject.SetActive(false);
+            }
+        }
     }
 }

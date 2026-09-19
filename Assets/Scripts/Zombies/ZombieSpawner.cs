@@ -261,9 +261,19 @@ namespace ZombieApocalypse.Zombies
         /// </summary>
         public void TriggerEncounterWave(int requestedCount)
         {
-            if (zombiePrefab == null || playerTransform == null) return;
-            if (playerHealth != null && playerHealth.IsDead) return;
-            if (SafeZoneTrigger.IsPlayerInSafeZone) return;
+            TriggerEncounterWaveWithCallback(requestedCount);
+        }
+
+        /// <summary>
+        /// Single-owner encounter wave spawning method for Phase 10 world events.
+        /// Spawns up to requestedCount zombies, capped under maxActiveZombies, and returns the exact list of spawned ZombieHealth components.
+        /// </summary>
+        public List<ZombieHealth> TriggerEncounterWaveWithCallback(int requestedCount)
+        {
+            List<ZombieHealth> spawnedList = new List<ZombieHealth>();
+            if (zombiePrefab == null || playerTransform == null) return spawnedList;
+            if (playerHealth != null && playerHealth.IsDead) return spawnedList;
+            if (SafeZoneTrigger.IsPlayerInSafeZone) return spawnedList;
 
             DifficultyStats difficulty = DifficultyManager.Instance != null 
                 ? DifficultyManager.Instance.GetCurrentDifficulty() 
@@ -273,7 +283,7 @@ namespace ZombieApocalypse.Zombies
             if (availableSlots <= 0)
             {
                 Debug.LogWarning("[ZombieSpawner] Encounter wave requested, but maxActiveZombies cap is reached. 0 zombies spawned.");
-                return;
+                return spawnedList;
             }
 
             int spawnCount = Mathf.Min(requestedCount, availableSlots);
@@ -303,6 +313,7 @@ namespace ZombieApocalypse.Zombies
                     {
                         health.Initialize(variantData);
                         activeLivingZombies.Add(health);
+                        spawnedList.Add(health);
                     }
                     if (ai != null)
                     {
@@ -315,6 +326,7 @@ namespace ZombieApocalypse.Zombies
             }
 
             Debug.Log($"[ZombieSpawner] Triggered Horde Encounter Wave. Requested: {requestedCount}, Available: {availableSlots}, Spawned: {actualSpawned}");
+            return spawnedList;
         }
 
         private bool IsPositionInPlayerFOV(Vector3 position)
