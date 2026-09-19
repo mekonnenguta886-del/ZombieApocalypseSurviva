@@ -52,6 +52,10 @@ namespace ZombieApocalypse.WorldEvents
         public float waveDelay = 8.0f;
         public float difficultyMultiplier = 1.0f;
 
+        [Header("Boss Encounter Configuration")]
+        public ZombieApocalypse.Zombies.ZombieData bossVariantOverride;
+        public bool spawnBossMinions = true;
+
         [Header("Distance & Proximity Limits")]
         public float minPlayerDistance = 15.0f;
         public float maxPlayerDistance = 40.0f;

@@ -47,6 +47,7 @@ namespace ZombieApocalypse.WorldEvents
         [SerializeField] private int currentWaveIndex = 0;
 
         private List<ZombieHealth> trackedEventZombies = new List<ZombieHealth>();
+        private ZombieHealth activeBossZombie;
         private WorldEventTrigger activeTrigger;
         private Vector3 eventCenterPosition;
         private Coroutine activeWaveCoroutine;
@@ -193,6 +194,7 @@ namespace ZombieApocalypse.WorldEvents
             eventCenterPosition = position;
             currentWaveIndex = 0;
             eventTimer = 0f;
+            activeBossZombie = null;
             trackedEventZombies.Clear();
 
             SetState(WorldEventState.Preparing);
@@ -215,8 +217,28 @@ namespace ZombieApocalypse.WorldEvents
                 Debug.Log($"[WorldEventManager] Spawning Wave {currentWaveIndex}/{activeEventData.waveCount} for '{activeEventData.displayName}'.");
                 OnWorldEventWaveChanged?.Invoke(activeEventData, currentWaveIndex, activeEventData.waveCount);
 
-                // Request wave spawn through single authoritative ZombieSpawner
-                if (zombieSpawner != null)
+                // Boss Encounter Special Handling: Spawn Boss Zombie on Wave 1
+                if (activeEventData.eventType == WorldEventType.BossEncounter && currentWaveIndex == 1 && zombieSpawner != null)
+                {
+                    ZombieData bossDataToSpawn = activeEventData.bossVariantOverride != null
+                        ? activeEventData.bossVariantOverride
+                        : zombieSpawner.BossData;
+
+                    Vector3 spawnPos = eventCenterPosition;
+                    if (UnityEngine.AI.NavMesh.SamplePosition(eventCenterPosition + Vector3.forward * 3f, out UnityEngine.AI.NavMeshHit hit, 5.0f, UnityEngine.AI.NavMesh.AllAreas))
+                    {
+                        spawnPos = hit.position;
+                    }
+
+                    activeBossZombie = zombieSpawner.SpawnVariant(bossDataToSpawn, spawnPos);
+                    if (activeBossZombie != null && !trackedEventZombies.Contains(activeBossZombie))
+                    {
+                        trackedEventZombies.Add(activeBossZombie);
+                    }
+                }
+
+                // Request minion/horde wave spawn through single authoritative ZombieSpawner if enabled
+                if (zombieSpawner != null && (activeEventData.eventType != WorldEventType.BossEncounter || activeEventData.spawnBossMinions))
                 {
                     List<ZombieHealth> newZombies = zombieSpawner.TriggerEncounterWaveWithCallback(activeEventData.zombiesPerWave);
                     if (newZombies != null)
@@ -361,6 +383,7 @@ namespace ZombieApocalypse.WorldEvents
             yield return new WaitForSeconds(delay);
             HideHUDOverlay();
             trackedEventZombies.Clear();
+            activeBossZombie = null;
             activeEventData = null;
             activeTrigger = null;
             SetState(WorldEventState.Inactive);
@@ -406,6 +429,15 @@ namespace ZombieApocalypse.WorldEvents
 
             float timeRemaining = Mathf.Max(0f, activeEventData.eventDuration - eventTimer);
             hud.SetWorldEventHUD(activeEventData.displayName, currentWaveIndex, activeEventData.waveCount, TrackedZombieCount, timeRemaining);
+
+            if (activeBossZombie != null && !activeBossZombie.IsDead)
+            {
+                hud.SetBossHUD(activeBossZombie.Data?.zombieName ?? "BOSS ZOMBIE", activeBossZombie.CurrentHealth, activeBossZombie.MaxHealth);
+            }
+            else
+            {
+                hud.HideBossHUD();
+            }
         }
 
         private void HideHUDOverlay()
@@ -414,6 +446,7 @@ namespace ZombieApocalypse.WorldEvents
             if (hud != null)
             {
                 hud.HideWorldEventHUD();
+                hud.HideBossHUD();
             }
         }
 

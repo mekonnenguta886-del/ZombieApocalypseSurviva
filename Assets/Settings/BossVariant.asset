@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f20d5c8989b542e438992e59b2075678, type: 3}
+  m_Name: BossVariant
+  m_EditorClassIdentifier: 
+  zombieName: Boss Zombie
+  zombieType: 3
+  maxHealth: 600
+  moveSpeed: 2.8
+  attackDamage: 50
+  attackRange: 2.5
+  attackCooldown: 1.0
+  attackWindupTime: 0.4
+  staggerThreshold: 100
+  hasStaggerArmor: 1
+  damageResistance: 0.20
+  staggerResistance: 1.0
+  knockbackResistance: 1.0
+  spawnWeight: 0.1
+  difficultyMultiplier: 1.5
+  isBoss: 1
+  enableGroundSlam: 1
+  groundSlamDamage: 30
+  groundSlamRadius: 4.0
+  groundSlamCooldown: 8.0
+  enableRoar: 1
+  roarNoiseRadius: 35.0
+  roarCooldown: 12.0
+  enableRageState: 1
+  rageHealthThreshold: 0.35
+  rageSpeedMultiplier: 1.35
+  rageDamageMultiplier: 1.25
+  rageCooldownMultiplier: 0.75
+  detectionRadius: 20
+  loseTargetRadius: 25
+  sightDistance: 20
+  fieldOfViewAngle: 140
+  hearingMultiplier: 1.5
+  searchRadius: 10
+  investigateDuration: 6
+  deathDelay: 6

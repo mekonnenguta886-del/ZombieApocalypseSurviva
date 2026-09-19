@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f20d5c8989b542e438992e59b2075678, type: 3}
+  m_Name: TankVariant
+  m_EditorClassIdentifier: 
+  zombieName: Heavy Tank Zombie
+  zombieType: 2
+  maxHealth: 300
+  moveSpeed: 1.7
+  attackDamage: 35
+  attackRange: 2.2
+  attackCooldown: 2.0
+  attackWindupTime: 0.5
+  staggerThreshold: 60
+  hasStaggerArmor: 1
+  damageResistance: 0.15
+  staggerResistance: 0.5
+  knockbackResistance: 0.8
+  spawnWeight: 0.4
+  difficultyMultiplier: 1.2
+  isBoss: 0
+  enableGroundSlam: 0
+  groundSlamDamage: 30
+  groundSlamRadius: 4
+  groundSlamCooldown: 8
+  enableRoar: 0
+  roarNoiseRadius: 35
+  roarCooldown: 12
+  enableRageState: 0
+  rageHealthThreshold: 0.35
+  rageSpeedMultiplier: 1.35
+  rageDamageMultiplier: 1.25
+  rageCooldownMultiplier: 0.75
+  detectionRadius: 10
+  loseTargetRadius: 14
+  sightDistance: 10
+  fieldOfViewAngle: 90
+  hearingMultiplier: 0.8
+  searchRadius: 5
+  investigateDuration: 5
+  deathDelay: 5

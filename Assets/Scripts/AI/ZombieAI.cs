@@ -66,10 +66,21 @@ namespace ZombieApocalypse.AI
         private float investigateTimer;
         private float lastAlertTime;
         private float alertCooldown = 3.0f;
+        private float lastRoarTime;
+        private float lastGroundSlamTime;
         private int currentWaypointIndex = 0;
         private bool isWaitingAtPatrolPoint = false;
 
         public AIState CurrentState => currentState;
+
+        public bool IsRaging => zombieData != null && zombieData.isBoss && zombieData.enableRageState
+            && zombieHealth != null && zombieHealth.HealthPercentage <= zombieData.rageHealthThreshold;
+
+        public float GetRuntimeMoveSpeed()
+        {
+            if (zombieData == null) return 2.5f;
+            return zombieData.moveSpeed * (IsRaging ? zombieData.rageSpeedMultiplier : 1.0f);
+        }
 
         // Parameter Hashes
         private static readonly int SpeedHash = Animator.StringToHash("Speed");
@@ -130,7 +141,7 @@ namespace ZombieApocalypse.AI
 
             if (zombieData != null && navMeshAgent != null)
             {
-                navMeshAgent.speed = zombieData.moveSpeed;
+                navMeshAgent.speed = GetRuntimeMoveSpeed();
                 navMeshAgent.stoppingDistance = zombieData.attackRange * 0.85f;
             }
         }
@@ -175,6 +186,12 @@ namespace ZombieApocalypse.AI
                     HandleZombieDeath();
                 }
                 return;
+            }
+
+            // Dynamically update NavMeshAgent speed for Rage state scaling
+            if (navMeshAgent != null && navMeshAgent.isActiveAndEnabled && currentState != AIState.Dead)
+            {
+                navMeshAgent.speed = GetRuntimeMoveSpeed();
             }
 
             // Stagger Locomotion Pause Handling
@@ -258,6 +275,8 @@ namespace ZombieApocalypse.AI
                         return;
                     }
 
+                    TryTriggerBossRoar();
+
                     if (distanceToPlayer <= atkRange)
                     {
                         SetState(AIState.Attack);
@@ -265,7 +284,7 @@ namespace ZombieApocalypse.AI
                     }
 
                     SetNavMeshDestination(playerTransform.position);
-                    UpdateAnimator(navMeshAgent != null ? navMeshAgent.speed : 2.5f, false);
+                    UpdateAnimator(navMeshAgent != null ? navMeshAgent.speed : GetRuntimeMoveSpeed(), false);
                     break;
 
                 case AIState.Attack:
@@ -281,7 +300,17 @@ namespace ZombieApocalypse.AI
                     RotateTowardsPlayer();
                     UpdateAnimator(0f, true);
 
-                    float cooldown = zombieData != null ? zombieData.attackCooldown : 1.2f;
+                    // Boss Ground Slam Special Ability Check
+                    if (zombieData != null && zombieData.isBoss && zombieData.enableGroundSlam
+                        && Time.time >= lastGroundSlamTime + zombieData.groundSlamCooldown
+                        && distanceToPlayer <= zombieData.groundSlamRadius)
+                    {
+                        ExecuteGroundSlam();
+                        return;
+                    }
+
+                    float baseCooldown = zombieData != null ? zombieData.attackCooldown : 1.2f;
+                    float cooldown = baseCooldown * (IsRaging ? zombieData.rageCooldownMultiplier : 1.0f);
                     float windupDuration = zombieData != null ? zombieData.attackWindupTime : 0.4f;
 
                     if (Time.time >= lastAttackTime + cooldown)
@@ -512,11 +541,43 @@ namespace ZombieApocalypse.AI
             }
         }
 
+        private void TryTriggerBossRoar()
+        {
+            if (zombieData == null || !zombieData.isBoss || !zombieData.enableRoar) return;
+            if (Time.time < lastRoarTime + zombieData.roarCooldown) return;
+
+            lastRoarTime = Time.time;
+            float roarRadius = zombieData.roarNoiseRadius > 0f ? zombieData.roarNoiseRadius : 35.0f;
+            NoiseManager.EmitNoise(transform.position, roarRadius, NoiseType.Gunshot);
+            Debug.Log($"[ZombieAI] Boss {gameObject.name} ROARED! Noise radius: {roarRadius}m.");
+        }
+
+        private void ExecuteGroundSlam()
+        {
+            lastGroundSlamTime = Time.time;
+
+            if (playerHealth != null && !playerHealth.IsDead && !SafeZoneTrigger.IsPlayerInSafeZone)
+            {
+                float distToPlayer = Vector3.Distance(transform.position, playerTransform.position);
+                float radius = zombieData != null ? zombieData.groundSlamRadius : 4.0f;
+
+                if (distToPlayer <= radius)
+                {
+                    float baseDmg = zombieData != null ? zombieData.groundSlamDamage : 30.0f;
+                    float finalDmg = baseDmg * (IsRaging ? zombieData.rageDamageMultiplier : 1.0f);
+
+                    playerHealth.TakeDamage(finalDmg, transform.position);
+                    Debug.Log($"[ZombieAI] Boss {gameObject.name} GROUND SLAM hit player dealing {finalDmg} damage!");
+                }
+            }
+        }
+
         private void ExecuteAttack()
         {
             if (playerHealth != null && !playerHealth.IsDead)
             {
-                float damage = zombieData != null ? zombieData.attackDamage : 15f;
+                float baseDamage = zombieData != null ? zombieData.attackDamage : 15f;
+                float damage = baseDamage * (IsRaging ? zombieData.rageDamageMultiplier : 1.0f);
                 playerHealth.TakeDamage(damage, transform.position);
                 Debug.Log($"[ZombieAI] {gameObject.name} attacked player dealing {damage} damage.");
             }

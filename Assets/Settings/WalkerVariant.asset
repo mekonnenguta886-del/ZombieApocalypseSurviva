@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f20d5c8989b542e438992e59b2075678, type: 3}
+  m_Name: WalkerVariant
+  m_EditorClassIdentifier: 
+  zombieName: Walker Zombie
+  zombieType: 0
+  maxHealth: 100
+  moveSpeed: 2.5
+  attackDamage: 15
+  attackRange: 1.8
+  attackCooldown: 1.2
+  attackWindupTime: 0.4
+  staggerThreshold: 30
+  hasStaggerArmor: 0
+  damageResistance: 0
+  staggerResistance: 0
+  knockbackResistance: 0
+  spawnWeight: 1
+  difficultyMultiplier: 1
+  isBoss: 0
+  enableGroundSlam: 0
+  groundSlamDamage: 30
+  groundSlamRadius: 4
+  groundSlamCooldown: 8
+  enableRoar: 0
+  roarNoiseRadius: 35
+  roarCooldown: 12
+  enableRageState: 0
+  rageHealthThreshold: 0.35
+  rageSpeedMultiplier: 1.35
+  rageDamageMultiplier: 1.25
+  rageCooldownMultiplier: 0.75
+  detectionRadius: 12
+  loseTargetRadius: 16
+  sightDistance: 12
+  fieldOfViewAngle: 110
+  hearingMultiplier: 1
+  searchRadius: 6
+  investigateDuration: 5
+  deathDelay: 5

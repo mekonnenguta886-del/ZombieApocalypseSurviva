@@ -34,6 +34,7 @@ namespace ZombieApocalypse.Zombies
         [SerializeField] private ZombieData walkerData;
         [SerializeField] private ZombieData runnerData;
         [SerializeField] private ZombieData tankData;
+        [SerializeField] private ZombieData bossData;
 
         [Header("Spawn Points")]
         [SerializeField] private Transform[] spawnPoints;
@@ -46,6 +47,10 @@ namespace ZombieApocalypse.Zombies
         private float lastDynamicSpawnTime;
 
         public IReadOnlyList<GameObject> SpawnedZombies => spawnedZombies;
+        public ZombieData WalkerData => walkerData;
+        public ZombieData RunnerData => runnerData;
+        public ZombieData TankData => tankData;
+        public ZombieData BossData => bossData;
         public int ActiveLivingZombieCount
         {
             get
@@ -121,9 +126,41 @@ namespace ZombieApocalypse.Zombies
                 tankData.attackDamage = 35f;
                 tankData.attackRange = 2.2f;
                 tankData.attackCooldown = 2.0f;
+                tankData.hasStaggerArmor = true;
                 tankData.sightDistance = 10.0f;
                 tankData.fieldOfViewAngle = 90.0f;
                 tankData.hearingMultiplier = 0.8f;
+                tankData.damageResistance = 0.15f;
+            }
+
+            if (bossData == null)
+            {
+                bossData = ScriptableObject.CreateInstance<ZombieData>();
+                bossData.zombieName = "Boss Zombie";
+                bossData.zombieType = ZombieType.Boss;
+                bossData.maxHealth = 600f;
+                bossData.moveSpeed = 2.8f;
+                bossData.attackDamage = 50f;
+                bossData.attackRange = 2.5f;
+                bossData.attackCooldown = 1.0f;
+                bossData.hasStaggerArmor = true;
+                bossData.sightDistance = 20.0f;
+                bossData.fieldOfViewAngle = 140.0f;
+                bossData.hearingMultiplier = 1.5f;
+                bossData.damageResistance = 0.20f;
+                bossData.isBoss = true;
+                bossData.enableGroundSlam = true;
+                bossData.groundSlamDamage = 30.0f;
+                bossData.groundSlamRadius = 4.0f;
+                bossData.groundSlamCooldown = 8.0f;
+                bossData.enableRoar = true;
+                bossData.roarNoiseRadius = 35.0f;
+                bossData.roarCooldown = 12.0f;
+                bossData.enableRageState = true;
+                bossData.rageHealthThreshold = 0.35f;
+                bossData.rageSpeedMultiplier = 1.35f;
+                bossData.rageDamageMultiplier = 1.25f;
+                bossData.rageCooldownMultiplier = 0.75f;
             }
         }
 
@@ -327,6 +364,36 @@ namespace ZombieApocalypse.Zombies
 
             Debug.Log($"[ZombieSpawner] Triggered Horde Encounter Wave. Requested: {requestedCount}, Available: {availableSlots}, Spawned: {actualSpawned}");
             return spawnedList;
+        }
+
+        /// <summary>
+        /// Explicit single variant/boss spawning method for Phase 11.
+        /// Spawns zombiePrefab configured with variantData at the specified position.
+        /// </summary>
+        public ZombieHealth SpawnVariant(ZombieData variantData, Vector3 position)
+        {
+            if (zombiePrefab == null) return null;
+            ZombieData dataToUse = variantData != null ? variantData : walkerData;
+
+            GameObject zombie = Instantiate(zombiePrefab, position, Quaternion.identity, transform);
+            zombie.name = $"{dataToUse?.zombieName ?? "Zombie"}_{activeLivingZombies.Count + 1}";
+            spawnedZombies.Add(zombie);
+
+            ZombieHealth health = zombie.GetComponent<ZombieHealth>();
+            ZombieAI ai = zombie.GetComponent<ZombieAI>();
+
+            if (health != null)
+            {
+                health.Initialize(dataToUse);
+                activeLivingZombies.Add(health);
+            }
+            if (ai != null)
+            {
+                ai.Initialize(dataToUse);
+            }
+
+            Debug.Log($"[ZombieSpawner] Spawned variant '{dataToUse?.zombieName}' at {position}.");
+            return health;
         }
 
         private bool IsPositionInPlayerFOV(Vector3 position)

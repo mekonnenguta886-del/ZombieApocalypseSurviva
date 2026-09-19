@@ -29,6 +29,7 @@ namespace ZombieApocalypse.Zombies
         public ZombieData Data => zombieData;
         public float MaxHealth => zombieData != null ? zombieData.maxHealth : 100f;
         public float CurrentHealth => currentHealth;
+        public float HealthPercentage => MaxHealth > 0f ? currentHealth / MaxHealth : 0f;
         public bool IsDead => isDead;
         public float DeathDelay => zombieData != null ? zombieData.deathDelay : 5.0f;
 
@@ -70,7 +71,11 @@ namespace ZombieApocalypse.Zombies
             // Death Safety: Prevent damage processing if already dead
             if (isDead) return;
 
-            currentHealth = Mathf.Clamp(currentHealth - damage, 0f, MaxHealth);
+            // Apply Variant Damage Resistance factor
+            float resistance = zombieData != null ? Mathf.Clamp01(zombieData.damageResistance) : 0f;
+            float finalDamage = damage * (1f - resistance);
+
+            currentHealth = Mathf.Clamp(currentHealth - finalDamage, 0f, MaxHealth);
             OnHealthChanged?.Invoke(currentHealth, MaxHealth);
 
             if (animator != null && currentHealth > 0)
@@ -78,8 +83,9 @@ namespace ZombieApocalypse.Zombies
                 animator.SetTrigger(HurtTriggerHash);
             }
 
-            // Trigger Stagger in ZombieAI if damage exceeds threshold and zombie lacks stagger armor
-            if (currentHealth > 0f && zombieData != null && !zombieData.hasStaggerArmor && damage >= zombieData.staggerThreshold)
+            // Trigger Stagger in ZombieAI if final damage exceeds stagger threshold (adjusted by stagger resistance) and zombie lacks stagger armor
+            float effectiveStaggerThreshold = zombieData != null ? zombieData.staggerThreshold * (1f + zombieData.staggerResistance) : 30.0f;
+            if (currentHealth > 0f && zombieData != null && !zombieData.hasStaggerArmor && finalDamage >= effectiveStaggerThreshold)
             {
                 ZombieAI ai = GetComponent<ZombieAI>();
                 if (ai != null)

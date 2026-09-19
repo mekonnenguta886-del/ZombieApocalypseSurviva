@@ -37,6 +37,11 @@ namespace ZombieApocalypse.UI
         [SerializeField] private GameObject gameOverPanel;
         [SerializeField] private TextMeshProUGUI objectiveText;
 
+        [Header("Boss HUD Overlay")]
+        [SerializeField] private GameObject bossHUDPanel;
+        [SerializeField] private TextMeshProUGUI bossNameText;
+        [SerializeField] private Slider bossHealthBarSlider;
+
         // Player References
         private PlayerHealth playerHealth;
         private PlayerStamina playerStamina;
@@ -326,6 +331,32 @@ namespace ZombieApocalypse.UI
             if (notificationToastText != null)
             {
                 notificationToastText.gameObject.SetActive(false);
+            }
+        }
+
+        public void SetBossHUD(string title, float currentHealth, float maxHealth)
+        {
+            if (bossNameText != null)
+            {
+                bossNameText.text = title.ToUpper();
+            }
+
+            if (bossHealthBarSlider != null && maxHealth > 0f)
+            {
+                bossHealthBarSlider.value = Mathf.Clamp01(currentHealth / maxHealth);
+            }
+
+            if (bossHUDPanel != null)
+            {
+                bossHUDPanel.SetActive(true);
+            }
+        }
+
+        public void HideBossHUD()
+        {
+            if (bossHUDPanel != null)
+            {
+                bossHUDPanel.SetActive(false);
             }
         }
     }
