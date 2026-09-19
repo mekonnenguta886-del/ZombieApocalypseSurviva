@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using ZombieApocalypse.UI;
 
 namespace ZombieApocalypse.Player
 {
@@ -34,10 +35,27 @@ namespace ZombieApocalypse.Player
         /// </summary>
         public void TakeDamage(float amount)
         {
+            TakeDamage(amount, Vector3.zero);
+        }
+
+        /// <summary>
+        /// Applies damage to player health pool and notifies HUD of damage origin for directional indicators.
+        /// </summary>
+        public void TakeDamage(float amount, Vector3 damageOrigin)
+        {
             if (isDead) return;
 
             currentHealth = Mathf.Clamp(currentHealth - amount, 0f, maxHealth);
             OnHealthChanged?.Invoke(currentHealth, maxHealth);
+
+            if (damageOrigin != Vector3.zero)
+            {
+                HUDController hud = HUDController.Instance != null ? HUDController.Instance : FindObjectOfType<HUDController>();
+                if (hud != null)
+                {
+                    hud.ShowDirectionalDamageIndicator(damageOrigin);
+                }
+            }
 
             if (currentHealth <= 0f && !isDead)
             {

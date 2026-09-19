@@ -146,6 +146,25 @@ namespace ZombieApocalypse.AI
             }
         }
 
+        private bool isStaggered = false;
+        private float staggerTimer = 0.0f;
+        private bool isWindingUpAttack = false;
+        private float attackWindupTimer = 0.0f;
+
+        public void TriggerStagger(float duration)
+        {
+            if (zombieHealth != null && zombieHealth.IsDead) return;
+            if (currentState == AIState.Dead) return;
+
+            isStaggered = true;
+            staggerTimer = duration;
+            isWindingUpAttack = false;
+            attackWindupTimer = 0f;
+
+            StopNavMeshMovement();
+            UpdateAnimator(0f, false);
+        }
+
         private void Update()
         {
             // Death Safety Guard: If zombie is dead, remain in DEAD state and stop AI
@@ -154,6 +173,20 @@ namespace ZombieApocalypse.AI
                 if (currentState != AIState.Dead)
                 {
                     HandleZombieDeath();
+                }
+                return;
+            }
+
+            // Stagger Locomotion Pause Handling
+            if (isStaggered)
+            {
+                staggerTimer -= Time.deltaTime;
+                StopNavMeshMovement();
+                UpdateAnimator(0f, false);
+
+                if (staggerTimer <= 0f)
+                {
+                    isStaggered = false;
                 }
                 return;
             }
@@ -238,6 +271,8 @@ namespace ZombieApocalypse.AI
                 case AIState.Attack:
                     if (distanceToPlayer > atkRange * 1.3f)
                     {
+                        isWindingUpAttack = false;
+                        attackWindupTimer = 0f;
                         SetState(AIState.Chase);
                         return;
                     }
@@ -247,10 +282,25 @@ namespace ZombieApocalypse.AI
                     UpdateAnimator(0f, true);
 
                     float cooldown = zombieData != null ? zombieData.attackCooldown : 1.2f;
+                    float windupDuration = zombieData != null ? zombieData.attackWindupTime : 0.4f;
+
                     if (Time.time >= lastAttackTime + cooldown)
                     {
-                        lastAttackTime = Time.time;
-                        ExecuteAttack();
+                        attackWindupTimer += Time.deltaTime;
+                        if (attackWindupTimer >= windupDuration)
+                        {
+                            lastAttackTime = Time.time;
+                            attackWindupTimer = 0f;
+
+                            // Attack Wind-Up Safety Guard: Validate exact conditions at damage instant
+                            if (playerHealth != null && !playerHealth.IsDead && !isStaggered 
+                                && zombieHealth != null && !zombieHealth.IsDead 
+                                && currentState == AIState.Attack && distanceToPlayer <= atkRange * 1.3f 
+                                && !SafeZoneTrigger.IsPlayerInSafeZone)
+                            {
+                                ExecuteAttack();
+                            }
+                        }
                     }
                     break;
 
@@ -467,7 +517,7 @@ namespace ZombieApocalypse.AI
             if (playerHealth != null && !playerHealth.IsDead)
             {
                 float damage = zombieData != null ? zombieData.attackDamage : 15f;
-                playerHealth.TakeDamage(damage);
+                playerHealth.TakeDamage(damage, transform.position);
                 Debug.Log($"[ZombieAI] {gameObject.name} attacked player dealing {damage} damage.");
             }
         }

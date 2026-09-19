@@ -64,6 +64,8 @@ namespace ZombieApocalypse.Missions
             Instance = this;
         }
 
+        private float hordeTimer;
+
         private void Start()
         {
             BindPlayerReferences();
@@ -71,6 +73,35 @@ namespace ZombieApocalypse.Missions
             if (autoStartFirstMission && availableMissions.Count > 0)
             {
                 StartMission(activeMissionIndex);
+            }
+        }
+
+        private void Update()
+        {
+            if (isMissionComplete || activeMissionData == null) return;
+            if (playerHealth != null && playerHealth.IsDead) return;
+            if (SafeZoneTrigger.IsPlayerInSafeZone) return;
+
+            // Handle SurviveHorde duration objective progress
+            hordeTimer += Time.deltaTime;
+            if (hordeTimer >= 1.0f)
+            {
+                hordeTimer = 0f;
+                foreach (var obj in runtimeObjectives)
+                {
+                    if (obj == null || obj.IsCompleted) continue;
+                    if (obj.type == ObjectiveType.SurviveHorde)
+                    {
+                        obj.currentAmount = Mathf.Min(obj.currentAmount + 1, obj.requiredAmount);
+                        OnObjectiveUpdated?.Invoke(activeMissionData, obj);
+
+                        if (obj.currentAmount >= obj.requiredAmount)
+                        {
+                            CompleteObjective(obj);
+                        }
+                        break;
+                    }
+                }
             }
         }
 

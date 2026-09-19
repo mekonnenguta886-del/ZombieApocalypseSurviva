@@ -10,7 +10,8 @@ namespace ZombieApocalypse.Missions
         CollectItem,
         KillZombies,
         Interact,
-        Extraction
+        Extraction,
+        SurviveHorde
     }
 
     public enum ObjectiveState
@@ -44,7 +45,7 @@ namespace ZombieApocalypse.Missions
 
         public bool IsCompleted => state == ObjectiveState.Complete || (IsCountBased && currentAmount >= requiredAmount);
 
-        public bool IsCountBased => type == ObjectiveType.KillZombies || type == ObjectiveType.CollectItem;
+        public bool IsCountBased => type == ObjectiveType.KillZombies || type == ObjectiveType.CollectItem || type == ObjectiveType.SurviveHorde;
 
         public string GetProgressString()
         {

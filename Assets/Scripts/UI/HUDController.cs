@@ -46,7 +46,19 @@ namespace ZombieApocalypse.UI
         private PlayerInteraction playerInteraction;
         private InventorySystem inventorySystem;
 
+        public static HUDController Instance { get; private set; }
+
         private float toastDisplayTimer;
+
+        private void Awake()
+        {
+            if (Instance != null && Instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+            Instance = this;
+        }
 
         private void Start()
         {
@@ -278,6 +290,22 @@ namespace ZombieApocalypse.UI
             {
                 objectiveText.text = objective;
             }
+        }
+
+        public void ShowHitmarker(bool isCritical)
+        {
+            if (notificationToastText != null)
+            {
+                string text = isCritical ? "<color=red>HEADSHOT!</color>" : "<color=white>HIT</color>";
+                Debug.Log($"[HUDController] Hitmarker triggered ({text})");
+            }
+        }
+
+        public void ShowDirectionalDamageIndicator(Vector3 originPos)
+        {
+            Vector3 playerPos = playerController != null ? playerController.transform.position : transform.position;
+            Vector3 dir = (originPos - playerPos).normalized;
+            Debug.Log($"[HUDController] Directional Damage Indicator triggered from origin {originPos} (Direction: {dir})");
         }
     }
 }

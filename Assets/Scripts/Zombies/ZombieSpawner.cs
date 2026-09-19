@@ -255,6 +255,68 @@ namespace ZombieApocalypse.Zombies
             }
         }
 
+        /// <summary>
+        /// Single-owner encounter wave spawning method for Phase 9.
+        /// Spawns up to requestedCount zombies, strictly capped at available slots before reaching maxActiveZombies.
+        /// </summary>
+        public void TriggerEncounterWave(int requestedCount)
+        {
+            if (zombiePrefab == null || playerTransform == null) return;
+            if (playerHealth != null && playerHealth.IsDead) return;
+            if (SafeZoneTrigger.IsPlayerInSafeZone) return;
+
+            DifficultyStats difficulty = DifficultyManager.Instance != null 
+                ? DifficultyManager.Instance.GetCurrentDifficulty() 
+                : new DifficultyStats { maxActiveZombies = 10, spawnInterval = 20.0f, walkerWeight = 0.6f, runnerWeight = 0.3f, tankWeight = 0.1f };
+
+            int availableSlots = difficulty.maxActiveZombies - ActiveLivingZombieCount;
+            if (availableSlots <= 0)
+            {
+                Debug.LogWarning("[ZombieSpawner] Encounter wave requested, but maxActiveZombies cap is reached. 0 zombies spawned.");
+                return;
+            }
+
+            int spawnCount = Mathf.Min(requestedCount, availableSlots);
+            int actualSpawned = 0;
+
+            for (int i = 0; i < spawnCount; i++)
+            {
+                for (int attempt = 0; attempt < 5; attempt++)
+                {
+                    float randomDist = Random.Range(minSpawnDistance, maxSpawnDistance);
+                    Vector2 randomCircle = Random.insideUnitCircle.normalized * randomDist;
+                    Vector3 candidatePos = playerTransform.position + new Vector3(randomCircle.x, 0f, randomCircle.y);
+
+                    if (!NavMesh.SamplePosition(candidatePos, out NavMeshHit hit, 3.0f, NavMesh.AllAreas)) continue;
+                    if (SafeZoneTrigger.IsPositionInSafeZone(hit.position)) continue;
+                    if (IsPositionInPlayerFOV(hit.position)) continue;
+
+                    ZombieData variantData = SelectVariantData(difficulty);
+                    GameObject zombie = Instantiate(zombiePrefab, hit.position, Quaternion.identity, transform);
+                    zombie.name = $"HordeZombie_{variantData?.zombieName ?? "Walker"}_{activeLivingZombies.Count + 1}";
+                    spawnedZombies.Add(zombie);
+
+                    ZombieHealth health = zombie.GetComponent<ZombieHealth>();
+                    ZombieAI ai = zombie.GetComponent<ZombieAI>();
+
+                    if (health != null)
+                    {
+                        health.Initialize(variantData);
+                        activeLivingZombies.Add(health);
+                    }
+                    if (ai != null)
+                    {
+                        ai.Initialize(variantData);
+                    }
+
+                    actualSpawned++;
+                    break;
+                }
+            }
+
+            Debug.Log($"[ZombieSpawner] Triggered Horde Encounter Wave. Requested: {requestedCount}, Available: {availableSlots}, Spawned: {actualSpawned}");
+        }
+
         private bool IsPositionInPlayerFOV(Vector3 position)
         {
             if (mainCamera == null) mainCamera = Camera.main;
@@ -295,3 +357,47 @@ namespace ZombieApocalypse.Zombies
 
         private Vector3 GetRandomSpawnPosition(int index)
         {
+            if (spawnPoints != null && spawnPoints.Length > 0)
+            {
+                Transform sp = spawnPoints[index % spawnPoints.Length];
+                if (sp != null)
+                {
+                    Vector2 randomCircle = Random.insideUnitCircle * spawnRadius;
+                    Vector3 candidate = sp.position + new Vector3(randomCircle.x, 0f, randomCircle.y);
+                    if (NavMesh.SamplePosition(candidate, out NavMeshHit hit, 3.0f, NavMesh.AllAreas))
+                    {
+                        return hit.position;
+                    }
+                    return sp.position;
+                }
+            }
+
+            Vector2 circle = Random.insideUnitCircle * spawnRadius;
+            Vector3 pos = transform.position + new Vector3(circle.x, 0f, circle.y);
+            if (NavMesh.SamplePosition(pos, out NavMeshHit navHit, 3.0f, NavMesh.AllAreas))
+            {
+                return navHit.position;
+            }
+            return transform.position;
+        }
+
+        private void HandleZombieKilled(ZombieHealth zombieHealth)
+        {
+            if (zombieHealth != null && activeLivingZombies.Contains(zombieHealth))
+            {
+                activeLivingZombies.Remove(zombieHealth);
+            }
+        }
+
+        private void PruneActiveZombiesList()
+        {
+            for (int i = activeLivingZombies.Count - 1; i >= 0; i--)
+            {
+                if (activeLivingZombies[i] == null || activeLivingZombies[i].IsDead)
+                {
+                    activeLivingZombies.RemoveAt(i);
+                }
+            }
+        }
+    }
+}
