@@ -28,9 +28,16 @@ namespace ZombieApocalypse.Zombies
         public float attackRange = 1.8f;
         public float attackCooldown = 1.2f;
 
-        [Header("Perception")]
+        [Header("Perception & Hearing")]
         public float detectionRadius = 12.0f;
         public float loseTargetRadius = 16.0f;
+        public float sightDistance = 12.0f;
+        public float fieldOfViewAngle = 110.0f;
+        public float hearingMultiplier = 1.0f;
+
+        [Header("Investigation & Search")]
+        public float searchRadius = 6.0f;
+        public float investigateDuration = 5.0f;
 
         [Header("Cleanup")]
         public float deathDelay = 5.0f;

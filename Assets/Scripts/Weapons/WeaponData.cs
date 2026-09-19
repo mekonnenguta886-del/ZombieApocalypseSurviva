@@ -27,6 +27,7 @@ namespace ZombieApocalypse.Weapons
         public int pelletsPerShot = 1;   // 1 for Pistol/Rifle, 8 for Shotgun
         public bool isAutomatic = false;
         public float recoilAmount = 1.0f;
+        public float fireNoiseRadius = 25.0f; // Radius of gunshot noise event for AI perception
 
         [Header("Ammunition")]
         [Min(1)] public int magazineSize = 12;
