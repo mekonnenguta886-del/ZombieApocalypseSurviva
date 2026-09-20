@@ -60,6 +60,38 @@ namespace ZombieApocalypse.Weapons
         public WeaponData CurrentWeapon => CurrentSlot != null ? CurrentSlot.weaponData : null;
         public bool IsReloading => isReloading;
 
+        public float GetEffectiveDamage()
+        {
+            if (CurrentWeapon == null) return 20f;
+            return WeaponUpgradeSystem.Instance != null
+                ? WeaponUpgradeSystem.Instance.GetEffectiveDamage(CurrentWeapon)
+                : CurrentWeapon.damage;
+        }
+
+        public int GetEffectiveMagazineSize()
+        {
+            if (CurrentWeapon == null) return 12;
+            return WeaponUpgradeSystem.Instance != null
+                ? WeaponUpgradeSystem.Instance.GetEffectiveMagazineSize(CurrentWeapon)
+                : CurrentWeapon.magazineSize;
+        }
+
+        public float GetEffectiveFireRate()
+        {
+            if (CurrentWeapon == null) return 0.25f;
+            return WeaponUpgradeSystem.Instance != null
+                ? WeaponUpgradeSystem.Instance.GetEffectiveFireRate(CurrentWeapon)
+                : CurrentWeapon.fireRate;
+        }
+
+        public float GetEffectiveRecoil()
+        {
+            if (CurrentWeapon == null) return 1.0f;
+            return WeaponUpgradeSystem.Instance != null
+                ? WeaponUpgradeSystem.Instance.GetEffectiveRecoil(CurrentWeapon)
+                : CurrentWeapon.recoilAmount;
+        }
+
         private void Awake()
         {
             inputHandler = GetComponent<PlayerInputHandler>();
@@ -168,7 +200,7 @@ namespace ZombieApocalypse.Weapons
         public void TryReload()
         {
             if (isReloading || CurrentSlot == null || CurrentWeapon == null) return;
-            if (CurrentSlot.currentMagazineAmmo >= CurrentWeapon.magazineSize) return; // Mag full
+            if (CurrentSlot.currentMagazineAmmo >= GetEffectiveMagazineSize()) return; // Mag full
             if (CurrentSlot.reserveAmmo <= 0) return; // No reserve ammo
 
             StartCoroutine(PerformReloadSequence());
@@ -188,7 +220,7 @@ namespace ZombieApocalypse.Weapons
             yield return new WaitForSeconds(CurrentWeapon.reloadTime);
 
             // Transfer ammo from reserve to mag
-            int needed = CurrentWeapon.magazineSize - CurrentSlot.currentMagazineAmmo;
+            int needed = GetEffectiveMagazineSize() - CurrentSlot.currentMagazineAmmo;
             int transferred = Mathf.Min(needed, CurrentSlot.reserveAmmo);
 
             CurrentSlot.currentMagazineAmmo += transferred;
@@ -232,7 +264,7 @@ namespace ZombieApocalypse.Weapons
         {
             if (isReloading || CurrentSlot == null || CurrentWeapon == null) return false;
             if (CurrentSlot.currentMagazineAmmo <= 0) return false;
-            return Time.time >= lastFireTime + CurrentWeapon.fireRate;
+            return Time.time >= lastFireTime + GetEffectiveFireRate();
         }
 
         private void FireCurrentWeapon()
@@ -259,7 +291,7 @@ namespace ZombieApocalypse.Weapons
             // Apply Camera Recoil
             if (playerCamera != null)
             {
-                playerCamera.ApplyRecoil(CurrentWeapon.recoilAmount);
+                playerCamera.ApplyRecoil(GetEffectiveRecoil());
             }
 
             // Play Firing Audio SFX
@@ -316,7 +348,7 @@ namespace ZombieApocalypse.Weapons
 
                 if (zombieHealth != null && !zombieHealth.IsDead)
                 {
-                    float baseDmg = CurrentWeapon != null ? CurrentWeapon.damage : 20f;
+                    float baseDmg = GetEffectiveDamage();
                     float multiplier = hitbox != null ? hitbox.DamageMultiplier : 1.0f;
                     float finalDmg = baseDmg * multiplier;
 
@@ -402,12 +434,26 @@ namespace ZombieApocalypse.Weapons
             {
                 if (slot != null && slot.weaponData != null)
                 {
-                    saveData.slots.Add(new ZombieApocalypse.Save.WeaponSlotSaveData
+                    var slotSave = new ZombieApocalypse.Save.WeaponSlotSaveData
                     {
                         weaponName = slot.weaponData.weaponName,
                         currentMagazineAmmo = slot.currentMagazineAmmo,
                         reserveAmmo = slot.reserveAmmo
-                    });
+                    };
+
+                    if (WeaponUpgradeSystem.Instance != null)
+                    {
+                        var state = WeaponUpgradeSystem.Instance.GetUpgradeState(slot.weaponData.weaponName);
+                        if (state != null)
+                        {
+                            slotSave.damageLevel = state.damageLevel;
+                            slotSave.magazineLevel = state.magazineLevel;
+                            slotSave.fireRateLevel = state.fireRateLevel;
+                            slotSave.recoilLevel = state.recoilLevel;
+                        }
+                    }
+
+                    saveData.slots.Add(slotSave);
                 }
             }
 
@@ -415,7 +461,7 @@ namespace ZombieApocalypse.Weapons
         }
 
         /// <summary>
-        /// Restores magazine ammo, reserve ammo, and active weapon slot without triggering firing, reloading coroutines, or audio.
+        /// Restores magazine ammo, reserve ammo, active weapon slot, and runtime upgrade levels.
         /// </summary>
         public void RestoreWeaponState(int activeSlotIndex, List<ZombieApocalypse.Save.WeaponSlotSaveData> savedSlots)
         {
@@ -430,6 +476,15 @@ namespace ZombieApocalypse.Weapons
                     {
                         runtime.currentMagazineAmmo = saved.currentMagazineAmmo;
                         runtime.reserveAmmo = saved.reserveAmmo;
+
+                        if (WeaponUpgradeSystem.Instance != null && !string.IsNullOrEmpty(saved.weaponName))
+                        {
+                            var state = WeaponUpgradeSystem.Instance.GetUpgradeState(saved.weaponName);
+                            state.damageLevel = saved.damageLevel;
+                            state.magazineLevel = saved.magazineLevel;
+                            state.fireRateLevel = saved.fireRateLevel;
+                            state.recoilLevel = saved.recoilLevel;
+                        }
                     }
                 }
             }

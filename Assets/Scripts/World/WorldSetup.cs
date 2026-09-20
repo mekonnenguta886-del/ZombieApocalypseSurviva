@@ -99,6 +99,7 @@ namespace ZombieApocalypse.World
                 safeHouseObj.AddComponent<SafeZoneTrigger>();
             }
             CreateDoor(safeHouseObj.transform, "Safe House Door", new Vector3(0f, 1.5f, 6f), false, null);
+            CreateWorkbench(safeHouseObj.transform, "Weapon Workbench", new Vector3(3f, 0.8f, 3f));
 
             // 2. Abandoned House (Position: 25, 0, 0)
             CreateLocationBuilding(worldRoot.transform, "AbandonedHouse", new Vector3(25f, 0f, 0f), new Vector3(10f, 4f, 10f), "ABANDONED HOUSE", "loc_abandoned_house", new Color(0.7f, 0.5f, 0.2f), out GameObject houseObj);
@@ -279,6 +280,20 @@ namespace ZombieApocalypse.World
 
             ItemPickup pickup = keyObj.AddComponent<ItemPickup>();
             pickup.Setup(keyData, 1);
+        }
+
+        private void CreateWorkbench(Transform parent, string benchName, Vector3 pos)
+        {
+            GameObject benchObj = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            benchObj.name = benchName;
+            benchObj.transform.SetParent(parent);
+            benchObj.transform.position = pos;
+            benchObj.transform.localScale = new Vector3(2.0f, 1.0f, 1.0f);
+            SetMaterialColor(benchObj, new Color(0.3f, 0.4f, 0.6f));
+
+            Workbench workbench = benchObj.AddComponent<Workbench>();
+            var nameF = typeof(Workbench).GetField("workbenchName", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            if (nameF != null) nameF.SetValue(workbench, benchName);
         }
 
         private void CreateWorldLabel(Transform parent, Vector3 pos, string text, Color color)

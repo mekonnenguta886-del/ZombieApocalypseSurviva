@@ -48,6 +48,10 @@ namespace ZombieApocalypse.Save
         public string weaponName;
         public int currentMagazineAmmo;
         public int reserveAmmo;
+        public int damageLevel = 0;
+        public int magazineLevel = 0;
+        public int fireRateLevel = 0;
+        public int recoilLevel = 0;
     }
 
     [Serializable]
