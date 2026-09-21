@@ -54,13 +54,21 @@ namespace ZombieApocalypse.Player
         {
             if (playerHealth != null && playerHealth.IsDead) return;
 
-            // Decay stats over time (adjusted by Survival Skill Perk multiplier)
+            // Decay stats over time (adjusted by Survival Skill Perk multiplier and Environmental Condition multipliers)
             float decayMult = ZombieApocalypse.Progression.PlayerProgressionSystem.Instance != null 
                 ? ZombieApocalypse.Progression.PlayerProgressionSystem.Instance.GetSurvivalDecayMultiplier() 
                 : 1.0f;
 
-            currentHunger = Mathf.Clamp(currentHunger - (hungerDecayRatePerSec * decayMult * Time.deltaTime), 0f, maxHunger);
-            currentThirst = Mathf.Clamp(currentThirst - (thirstDecayRatePerSec * decayMult * Time.deltaTime), 0f, maxThirst);
+            float envHungerMult = ZombieApocalypse.Environment.EnvironmentalConditionManager.Instance != null
+                ? ZombieApocalypse.Environment.EnvironmentalConditionManager.Instance.GetHungerDecayMultiplier()
+                : 1.0f;
+
+            float envThirstMult = ZombieApocalypse.Environment.EnvironmentalConditionManager.Instance != null
+                ? ZombieApocalypse.Environment.EnvironmentalConditionManager.Instance.GetThirstDecayMultiplier()
+                : 1.0f;
+
+            currentHunger = Mathf.Clamp(currentHunger - (hungerDecayRatePerSec * decayMult * envHungerMult * Time.deltaTime), 0f, maxHunger);
+            currentThirst = Mathf.Clamp(currentThirst - (thirstDecayRatePerSec * decayMult * envThirstMult * Time.deltaTime), 0f, maxThirst);
 
             CheckWarningThresholds();
             NotifyHUD();

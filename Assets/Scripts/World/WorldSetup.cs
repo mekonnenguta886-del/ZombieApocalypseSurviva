@@ -56,6 +56,12 @@ namespace ZombieApocalypse.World
                 GameObject progObj = new GameObject("[PlayerProgressionSystem]");
                 progObj.AddComponent<ZombieApocalypse.Progression.PlayerProgressionSystem>();
             }
+
+            if (ZombieApocalypse.Environment.EnvironmentalConditionManager.Instance == null && FindObjectOfType<ZombieApocalypse.Environment.EnvironmentalConditionManager>() == null)
+            {
+                GameObject envObj = new GameObject("[EnvironmentalConditionManager]");
+                envObj.AddComponent<ZombieApocalypse.Environment.EnvironmentalConditionManager>();
+            }
         }
 
         private void LoadDefaultItemData()
@@ -134,6 +140,25 @@ namespace ZombieApocalypse.World
 
             // 6. Extraction Zone (Position: -30, 0, 35)
             CreateLocationZone(worldRoot.transform, "ExtractionZone", new Vector3(-30f, 0f, 35f), new Vector3(12f, 2f, 12f), "EXTRACTION POINT", "loc_extraction", new Color(0.3f, 0.9f, 0.8f), out GameObject extractObj);
+
+            // 7. Toxic Hazard Zone (Position: -20, 0, 15)
+            CreateLocationZone(worldRoot.transform, "ToxicHazardZone", new Vector3(-20f, 0f, 15f), new Vector3(15f, 3f, 15f), "TOXIC HAZARD ZONE", "loc_toxic_zone", new Color(0.8f, 0.2f, 0.6f), out GameObject toxicZoneObj);
+            if (toxicZoneObj != null && toxicZoneObj.GetComponent<ZombieApocalypse.Environment.EnvironmentalHazardZone>() == null)
+            {
+                var hazardComp = toxicZoneObj.AddComponent<ZombieApocalypse.Environment.EnvironmentalHazardZone>();
+                var toxicCond = ScriptableObject.CreateInstance<ZombieApocalypse.Environment.EnvironmentalConditionData>();
+                toxicCond.conditionId = "cond_toxic_zone";
+                toxicCond.displayName = "Toxic Zone";
+                toxicCond.description = "Airborne chemical hazard causing health damage and dehydration.";
+                toxicCond.healthDamagePerSecond = 3.0f;
+                toxicCond.thirstDecayMultiplier = 1.5f;
+                toxicCond.hungerDecayMultiplier = 1.2f;
+                toxicCond.warningMessage = "DANGER: Entering Toxic Zone!";
+                toxicCond.badgeColor = new Color(0.9f, 0.2f, 0.2f);
+
+                var condField = typeof(ZombieApocalypse.Environment.EnvironmentalHazardZone).GetField("conditionData", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                if (condField != null) condField.SetValue(hazardComp, toxicCond);
+            }
         }
 
         private void CreateLocationBuilding(Transform parent, string name, Vector3 center, Vector3 size, string label, string locationId, Color color, out GameObject buildingRoot)
@@ -432,6 +457,11 @@ namespace ZombieApocalypse.World
             if (canvasObj.GetComponent<WorldEventUIController>() == null && FindObjectOfType<WorldEventUIController>() == null)
             {
                 canvasObj.AddComponent<WorldEventUIController>();
+            }
+
+            if (canvasObj.GetComponent<EnvironmentalUIController>() == null && FindObjectOfType<EnvironmentalUIController>() == null)
+            {
+                canvasObj.AddComponent<EnvironmentalUIController>();
             }
 
             GameObject missionPanel = GameObject.Find("MissionPanel");

@@ -161,7 +161,13 @@ namespace ZombieApocalypse.Save
                 data.worldEvents = ZombieApocalypse.WorldEvents.WorldEventManager.Instance.GetWorldEventSaveData();
             }
 
-            // 9. Write Save Data Atomically
+            // 9. Save Environmental State
+            if (ZombieApocalypse.Environment.EnvironmentalConditionManager.Instance != null)
+            {
+                data.environmental = ZombieApocalypse.Environment.EnvironmentalConditionManager.Instance.GetEnvironmentalSaveData();
+            }
+
+            // 10. Write Save Data Atomically
             bool success = SaveFileUtility.Save(data);
             if (success)
             {
@@ -296,7 +302,13 @@ namespace ZombieApocalypse.Save
                 ZombieApocalypse.WorldEvents.WorldEventManager.Instance.RestoreWorldEventState(data.worldEvents);
             }
 
-            // 10. Refresh UI
+            // 10. Restore Environmental State
+            if (ZombieApocalypse.Environment.EnvironmentalConditionManager.Instance != null && data.environmental != null)
+            {
+                ZombieApocalypse.Environment.EnvironmentalConditionManager.Instance.RestoreEnvironmentalState(data.environmental);
+            }
+
+            // 11. Refresh UI
             MissionUI missionUI = FindObjectOfType<MissionUI>();
             if (missionUI != null) missionUI.RefreshUI();
 

@@ -117,6 +117,14 @@ namespace ZombieApocalypse.Save
         public List<string> completedEventIds = new List<string>();
     }
 
+    [Serializable]
+    public class EnvironmentalSaveData
+    {
+        public string activeConditionId = "normal";
+        public float conditionTimer = 0f;
+        public string currentZoneId = "";
+    }
+
     /// <summary>
     /// Root serializable DTO for JSON save file persistence.
     /// Does not store any UnityEngine objects or runtime references directly.
@@ -135,5 +143,6 @@ namespace ZombieApocalypse.Save
         public List<LootContainerSaveData> lootContainers = new List<LootContainerSaveData>();
         public ProgressionSaveData progression = new ProgressionSaveData();
         public WorldEventSaveData worldEvents = new WorldEventSaveData();
+        public EnvironmentalSaveData environmental = new EnvironmentalSaveData();
     }
 }
