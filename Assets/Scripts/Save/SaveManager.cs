@@ -149,7 +149,13 @@ namespace ZombieApocalypse.Save
                 });
             }
 
-            // 7. Write Save Data Atomically
+            // 7. Save Progression State
+            if (ZombieApocalypse.Progression.PlayerProgressionSystem.Instance != null)
+            {
+                data.progression = ZombieApocalypse.Progression.PlayerProgressionSystem.Instance.GetProgressionSaveData();
+            }
+
+            // 8. Write Save Data Atomically
             bool success = SaveFileUtility.Save(data);
             if (success)
             {
@@ -272,7 +278,13 @@ namespace ZombieApocalypse.Save
                 }
             }
 
-            // 8. Refresh UI
+            // 8. Restore Progression State
+            if (ZombieApocalypse.Progression.PlayerProgressionSystem.Instance != null && data.progression != null)
+            {
+                ZombieApocalypse.Progression.PlayerProgressionSystem.Instance.RestoreProgressionState(data.progression);
+            }
+
+            // 9. Refresh UI
             MissionUI missionUI = FindObjectOfType<MissionUI>();
             if (missionUI != null) missionUI.RefreshUI();
 

@@ -50,6 +50,12 @@ namespace ZombieApocalypse.World
                 GameObject wemObj = new GameObject("[WorldEventManager]");
                 wemObj.AddComponent<ZombieApocalypse.WorldEvents.WorldEventManager>();
             }
+
+            if (ZombieApocalypse.Progression.PlayerProgressionSystem.Instance == null && FindObjectOfType<ZombieApocalypse.Progression.PlayerProgressionSystem>() == null)
+            {
+                GameObject progObj = new GameObject("[PlayerProgressionSystem]");
+                progObj.AddComponent<ZombieApocalypse.Progression.PlayerProgressionSystem>();
+            }
         }
 
         private void LoadDefaultItemData()
@@ -416,6 +422,11 @@ namespace ZombieApocalypse.World
             if (canvasObj.GetComponent<WorkbenchUIController>() == null && FindObjectOfType<WorkbenchUIController>() == null)
             {
                 canvasObj.AddComponent<WorkbenchUIController>();
+            }
+
+            if (canvasObj.GetComponent<ProgressionUIController>() == null && FindObjectOfType<ProgressionUIController>() == null)
+            {
+                canvasObj.AddComponent<ProgressionUIController>();
             }
 
             GameObject missionPanel = GameObject.Find("MissionPanel");

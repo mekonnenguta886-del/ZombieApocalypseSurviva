@@ -112,8 +112,13 @@ namespace ZombieApocalypse.Player
 
                 if (zombieHealth != null && !zombieHealth.IsDead)
                 {
-                    zombieHealth.TakeDamage(attackDamage);
-                    Debug.Log($"[PlayerCombat] Melee struck {col.name} dealing {attackDamage} damage.");
+                    float combatMult = ZombieApocalypse.Progression.PlayerProgressionSystem.Instance != null
+                        ? ZombieApocalypse.Progression.PlayerProgressionSystem.Instance.GetCombatDamageMultiplier()
+                        : 1.0f;
+                    float finalMeleeDamage = attackDamage * combatMult;
+
+                    zombieHealth.TakeDamage(finalMeleeDamage);
+                    Debug.Log($"[PlayerCombat] Melee struck {col.name} dealing {finalMeleeDamage} damage.");
                 }
             }
 

@@ -63,9 +63,15 @@ namespace ZombieApocalypse.Weapons
         public float GetEffectiveDamage()
         {
             if (CurrentWeapon == null) return 20f;
-            return WeaponUpgradeSystem.Instance != null
+            float baseDamage = WeaponUpgradeSystem.Instance != null
                 ? WeaponUpgradeSystem.Instance.GetEffectiveDamage(CurrentWeapon)
                 : CurrentWeapon.damage;
+
+            float combatMult = ZombieApocalypse.Progression.PlayerProgressionSystem.Instance != null
+                ? ZombieApocalypse.Progression.PlayerProgressionSystem.Instance.GetCombatDamageMultiplier()
+                : 1.0f;
+
+            return baseDamage * combatMult;
         }
 
         public int GetEffectiveMagazineSize()

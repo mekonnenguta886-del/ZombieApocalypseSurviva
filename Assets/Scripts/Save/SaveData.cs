@@ -94,6 +94,19 @@ namespace ZombieApocalypse.Save
         public List<InventorySlotSaveData> remainingContents = new List<InventorySlotSaveData>();
     }
 
+    [Serializable]
+    public class ProgressionSaveData
+    {
+        public int currentLevel = 1;
+        public int currentXP = 0;
+        public int totalXP = 0;
+        public int skillPoints = 0;
+        public int combatSkillLevel = 0;
+        public int survivalSkillLevel = 0;
+        public int scavengingSkillLevel = 0;
+        public int craftingSkillLevel = 0;
+    }
+
     /// <summary>
     /// Root serializable DTO for JSON save file persistence.
     /// Does not store any UnityEngine objects or runtime references directly.
@@ -110,5 +123,6 @@ namespace ZombieApocalypse.Save
         public MissionSaveData mission = new MissionSaveData();
         public List<DoorSaveData> doors = new List<DoorSaveData>();
         public List<LootContainerSaveData> lootContainers = new List<LootContainerSaveData>();
+        public ProgressionSaveData progression = new ProgressionSaveData();
     }
 }
