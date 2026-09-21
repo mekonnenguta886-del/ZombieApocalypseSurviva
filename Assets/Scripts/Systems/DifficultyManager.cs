@@ -54,13 +54,21 @@ namespace ZombieApocalypse.Systems
 
         public DifficultyStats GetCurrentDifficulty()
         {
+            float nightCapMult = ZombieApocalypse.World.WorldTimeManager.Instance != null
+                ? ZombieApocalypse.World.WorldTimeManager.Instance.GetNightSpawnCapMultiplier()
+                : 1.0f;
+
+            float nightAggrMult = ZombieApocalypse.World.WorldTimeManager.Instance != null
+                ? ZombieApocalypse.World.WorldTimeManager.Instance.GetNightAggressionMultiplier()
+                : 1.0f;
+
             return new DifficultyStats(
-                maxActiveZombies: Mathf.RoundToInt(baseMaxActiveZombies * currentMultiplier),
-                interval: Mathf.Max(5.0f, baseSpawnInterval / currentMultiplier),
+                maxActiveZombies: Mathf.RoundToInt(baseMaxActiveZombies * currentMultiplier * nightCapMult),
+                interval: Mathf.Max(3.0f, (baseSpawnInterval / currentMultiplier) / nightAggrMult),
                 walker: walkerWeight,
                 runner: runnerWeight,
                 tank: tankWeight,
-                multiplier: currentMultiplier
+                multiplier: currentMultiplier * nightAggrMult
             );
         }
 

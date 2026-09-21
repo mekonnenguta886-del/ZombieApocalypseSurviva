@@ -167,7 +167,18 @@ namespace ZombieApocalypse.Save
                 data.environmental = ZombieApocalypse.Environment.EnvironmentalConditionManager.Instance.GetEnvironmentalSaveData();
             }
 
-            // 10. Write Save Data Atomically
+            // 10. Save World Time & Weather State
+            if (ZombieApocalypse.World.WorldTimeManager.Instance != null)
+            {
+                data.worldTime.timeOfDayMinutes = ZombieApocalypse.World.WorldTimeManager.Instance.TimeOfDayMinutes;
+                data.worldTime.dayCount = ZombieApocalypse.World.WorldTimeManager.Instance.DayCount;
+            }
+            if (ZombieApocalypse.World.WeatherManager.Instance != null && ZombieApocalypse.World.WeatherManager.Instance.ActiveWeather != null)
+            {
+                data.worldTime.activeWeatherId = ZombieApocalypse.World.WeatherManager.Instance.ActiveWeather.weatherId;
+            }
+
+            // 11. Write Save Data Atomically
             bool success = SaveFileUtility.Save(data);
             if (success)
             {
@@ -308,7 +319,20 @@ namespace ZombieApocalypse.Save
                 ZombieApocalypse.Environment.EnvironmentalConditionManager.Instance.RestoreEnvironmentalState(data.environmental);
             }
 
-            // 11. Refresh UI
+            // 11. Restore World Time & Weather State
+            if (data.worldTime != null)
+            {
+                if (ZombieApocalypse.World.WorldTimeManager.Instance != null)
+                {
+                    ZombieApocalypse.World.WorldTimeManager.Instance.SetTimeOfDay(data.worldTime.timeOfDayMinutes, data.worldTime.dayCount);
+                }
+                if (ZombieApocalypse.World.WeatherManager.Instance != null)
+                {
+                    ZombieApocalypse.World.WeatherManager.Instance.RestoreWeatherState(data.worldTime.activeWeatherId);
+                }
+            }
+
+            // 12. Refresh UI
             MissionUI missionUI = FindObjectOfType<MissionUI>();
             if (missionUI != null) missionUI.RefreshUI();
 

@@ -125,6 +125,14 @@ namespace ZombieApocalypse.Save
         public string currentZoneId = "";
     }
 
+    [Serializable]
+    public class WorldTimeSaveData
+    {
+        public float timeOfDayMinutes = 480f; // 08:00 AM default
+        public int dayCount = 1;
+        public string activeWeatherId = "weather_clear";
+    }
+
     /// <summary>
     /// Root serializable DTO for JSON save file persistence.
     /// Does not store any UnityEngine objects or runtime references directly.
@@ -144,5 +152,6 @@ namespace ZombieApocalypse.Save
         public ProgressionSaveData progression = new ProgressionSaveData();
         public WorldEventSaveData worldEvents = new WorldEventSaveData();
         public EnvironmentalSaveData environmental = new EnvironmentalSaveData();
+        public WorldTimeSaveData worldTime = new WorldTimeSaveData();
     }
 }

@@ -62,6 +62,18 @@ namespace ZombieApocalypse.World
                 GameObject envObj = new GameObject("[EnvironmentalConditionManager]");
                 envObj.AddComponent<ZombieApocalypse.Environment.EnvironmentalConditionManager>();
             }
+
+            if (ZombieApocalypse.World.WorldTimeManager.Instance == null && FindObjectOfType<ZombieApocalypse.World.WorldTimeManager>() == null)
+            {
+                GameObject timeObj = new GameObject("[WorldTimeManager]");
+                timeObj.AddComponent<ZombieApocalypse.World.WorldTimeManager>();
+            }
+
+            if (ZombieApocalypse.World.WeatherManager.Instance == null && FindObjectOfType<ZombieApocalypse.World.WeatherManager>() == null)
+            {
+                GameObject weatherObj = new GameObject("[WeatherManager]");
+                weatherObj.AddComponent<ZombieApocalypse.World.WeatherManager>();
+            }
         }
 
         private void LoadDefaultItemData()
@@ -462,6 +474,11 @@ namespace ZombieApocalypse.World
             if (canvasObj.GetComponent<EnvironmentalUIController>() == null && FindObjectOfType<EnvironmentalUIController>() == null)
             {
                 canvasObj.AddComponent<EnvironmentalUIController>();
+            }
+
+            if (canvasObj.GetComponent<WorldTimeUIController>() == null && FindObjectOfType<WorldTimeUIController>() == null)
+            {
+                canvasObj.AddComponent<WorldTimeUIController>();
             }
 
             GameObject missionPanel = GameObject.Find("MissionPanel");
