@@ -400,7 +400,7 @@ namespace ZombieApocalypse.World
 
             mgr.StartMission(0);
 
-            // 2. UI Setup (HUD Canvas, MissionUI, ObjectiveMarker)
+            // 2. UI Setup (HUD Canvas, MissionUI, ObjectiveMarker, WorkbenchUI)
             GameObject canvasObj = GameObject.Find("GameplayCanvas");
             if (canvasObj == null)
             {
@@ -411,6 +411,11 @@ namespace ZombieApocalypse.World
                 canvasObj.AddComponent<UnityEngine.UI.GraphicRaycaster>();
 
                 HUDController hud = canvasObj.AddComponent<HUDController>();
+            }
+
+            if (canvasObj.GetComponent<WorkbenchUIController>() == null && FindObjectOfType<WorkbenchUIController>() == null)
+            {
+                canvasObj.AddComponent<WorkbenchUIController>();
             }
 
             GameObject missionPanel = GameObject.Find("MissionPanel");
