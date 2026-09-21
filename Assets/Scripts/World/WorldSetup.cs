@@ -429,6 +429,11 @@ namespace ZombieApocalypse.World
                 canvasObj.AddComponent<ProgressionUIController>();
             }
 
+            if (canvasObj.GetComponent<WorldEventUIController>() == null && FindObjectOfType<WorldEventUIController>() == null)
+            {
+                canvasObj.AddComponent<WorldEventUIController>();
+            }
+
             GameObject missionPanel = GameObject.Find("MissionPanel");
             if (missionPanel == null)
             {

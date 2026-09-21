@@ -10,13 +10,18 @@ namespace ZombieApocalypse.WorldEvents
         WaveHorde,
         Outbreak,
         SupplyAmbush,
-        BossEncounter
+        BossEncounter,
+        SupplyDrop,
+        SurvivorRescue,
+        TimedScavenge
     }
 
     public enum WorldEventCompletionMode
     {
         ClearAllWaves,
-        SurviveDuration
+        SurviveDuration,
+        InteractObject,
+        CollectItems
     }
 
     public enum WorldEventSafeZoneRule
@@ -27,7 +32,7 @@ namespace ZombieApocalypse.WorldEvents
     }
 
     /// <summary>
-    /// ScriptableObject data container defining reusable configuration for Phase 10 world events.
+    /// ScriptableObject data container defining reusable configuration for Phase 14 world events.
     /// Configurable in Unity Inspector for multiple encounter locations.
     /// </summary>
     [CreateAssetMenu(fileName = "NewWorldEventData", menuName = "Zombie Apocalypse/World Event Data")]
@@ -56,6 +61,10 @@ namespace ZombieApocalypse.WorldEvents
         public ZombieApocalypse.Zombies.ZombieData bossVariantOverride;
         public bool spawnBossMinions = true;
 
+        [Header("Supply & Scavenge Target Config")]
+        public ItemData targetItem;
+        public int requiredItemQuantity = 1;
+
         [Header("Distance & Proximity Limits")]
         public float minPlayerDistance = 15.0f;
         public float maxPlayerDistance = 40.0f;
@@ -63,6 +72,7 @@ namespace ZombieApocalypse.WorldEvents
         public float abandonRadius = 60.0f;
 
         [Header("Event Rewards")]
+        public int rewardXP = 150;
         public List<InventorySlot> rewardItems = new List<InventorySlot>();
         public AmmoType rewardAmmoType = AmmoType.Pistol;
         public int rewardAmmoAmount = 30;

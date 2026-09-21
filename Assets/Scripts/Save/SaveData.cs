@@ -107,6 +107,16 @@ namespace ZombieApocalypse.Save
         public int craftingSkillLevel = 0;
     }
 
+    [Serializable]
+    public class WorldEventSaveData
+    {
+        public string activeEventId = "";
+        public string currentState = "Inactive";
+        public int currentWaveIndex = 0;
+        public float eventTimer = 0f;
+        public List<string> completedEventIds = new List<string>();
+    }
+
     /// <summary>
     /// Root serializable DTO for JSON save file persistence.
     /// Does not store any UnityEngine objects or runtime references directly.
@@ -124,5 +134,6 @@ namespace ZombieApocalypse.Save
         public List<DoorSaveData> doors = new List<DoorSaveData>();
         public List<LootContainerSaveData> lootContainers = new List<LootContainerSaveData>();
         public ProgressionSaveData progression = new ProgressionSaveData();
+        public WorldEventSaveData worldEvents = new WorldEventSaveData();
     }
 }

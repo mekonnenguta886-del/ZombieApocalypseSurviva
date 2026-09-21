@@ -153,7 +153,7 @@ namespace ZombieApocalypse.WorldEvents
                 return;
             }
 
-            // Update Event Duration Timer
+            // Update Event Duration Timer & Objectives
             if (currentState == WorldEventState.Active || currentState == WorldEventState.WaveDelay)
             {
                 eventTimer += Time.deltaTime;
@@ -163,6 +163,25 @@ namespace ZombieApocalypse.WorldEvents
                     if (eventTimer >= activeEventData.eventDuration)
                     {
                         CompleteEvent();
+                        return;
+                    }
+                }
+                else if (activeEventData.completionMode == WorldEventCompletionMode.CollectItems || activeEventData.eventType == WorldEventType.TimedScavenge)
+                {
+                    if (activeEventData.targetItem != null && playerTransform != null)
+                    {
+                        var inv = playerTransform.GetComponent<InventorySystem>();
+                        int owned = inv != null ? inv.GetItemQuantity(activeEventData.targetItem) : 0;
+                        if (owned >= activeEventData.requiredItemQuantity)
+                        {
+                            CompleteEvent();
+                            return;
+                        }
+                    }
+
+                    if (activeEventData.eventDuration > 0f && eventTimer >= activeEventData.eventDuration)
+                    {
+                        FailEvent("Time Expired");
                         return;
                     }
                 }
@@ -331,6 +350,11 @@ namespace ZombieApocalypse.WorldEvents
         {
             if (currentState == WorldEventState.Completed) return;
 
+            if (activeEventData != null && !string.IsNullOrEmpty(activeEventData.eventId))
+            {
+                completedEventIds.Add(activeEventData.eventId);
+            }
+
             StopWaveCoroutine();
             SetState(WorldEventState.Completed);
 
@@ -409,6 +433,13 @@ namespace ZombieApocalypse.WorldEvents
             InventorySystem inventory = playerTransform.GetComponent<InventorySystem>();
             WeaponController weapons = playerTransform.GetComponent<WeaponController>();
 
+            // Grant XP Reward via PlayerProgressionSystem
+            if (activeEventData.rewardXP > 0 && ZombieApocalypse.Progression.PlayerProgressionSystem.Instance != null)
+            {
+                ZombieApocalypse.Progression.PlayerProgressionSystem.Instance.AddXP(activeEventData.rewardXP);
+                Debug.Log($"[WorldEventManager] Granted {activeEventData.rewardXP} XP for event '{activeEventData.displayName}'.");
+            }
+
             // Grant Item Rewards
             if (activeEventData.rewardItems != null && inventory != null)
             {
@@ -433,6 +464,53 @@ namespace ZombieApocalypse.WorldEvents
             {
                 weapons.AddReserveAmmo(activeEventData.rewardAmmoType, activeEventData.rewardAmmoAmount);
             }
+        }
+
+        private HashSet<string> completedEventIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        public ZombieApocalypse.Save.WorldEventSaveData GetWorldEventSaveData()
+        {
+            var saveData = new ZombieApocalypse.Save.WorldEventSaveData();
+            saveData.activeEventId = activeEventData != null ? activeEventData.eventId : "";
+            saveData.currentState = currentState.ToString();
+            saveData.currentWaveIndex = currentWaveIndex;
+            saveData.eventTimer = eventTimer;
+            saveData.completedEventIds = new List<string>(completedEventIds);
+
+            return saveData;
+        }
+
+        public void RestoreWorldEventState(ZombieApocalypse.Save.WorldEventSaveData saveData)
+        {
+            if (saveData == null) return;
+
+            if (saveData.completedEventIds != null)
+            {
+                completedEventIds = new HashSet<string>(saveData.completedEventIds, StringComparer.OrdinalIgnoreCase);
+            }
+
+            if (!string.IsNullOrEmpty(saveData.activeEventId) && Enum.TryParse(saveData.currentState, out WorldEventState parsedState))
+            {
+                if (parsedState == WorldEventState.Active || parsedState == WorldEventState.WaveDelay || parsedState == WorldEventState.Preparing)
+                {
+                    WorldEventData eventAsset = FindEventDataById(saveData.activeEventId);
+                    if (eventAsset != null)
+                    {
+                        activeEventData = eventAsset;
+                        currentWaveIndex = saveData.currentWaveIndex;
+                        eventTimer = saveData.eventTimer;
+                        SetState(parsedState);
+                        Debug.Log($"[WorldEventManager] Restored active event '{saveData.activeEventId}' in state {parsedState}.");
+                    }
+                }
+            }
+        }
+
+        private WorldEventData FindEventDataById(string id)
+        {
+            if (string.IsNullOrEmpty(id)) return null;
+            WorldEventData[] allEvents = Resources.FindObjectsOfTypeAll<WorldEventData>();
+            return Array.Find(allEvents, e => e != null && string.Equals(e.eventId, id, StringComparison.OrdinalIgnoreCase));
         }
 
         private void UpdateHUDOverlay()

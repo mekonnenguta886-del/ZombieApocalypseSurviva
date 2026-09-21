@@ -155,7 +155,13 @@ namespace ZombieApocalypse.Save
                 data.progression = ZombieApocalypse.Progression.PlayerProgressionSystem.Instance.GetProgressionSaveData();
             }
 
-            // 8. Write Save Data Atomically
+            // 8. Save World Events State
+            if (ZombieApocalypse.WorldEvents.WorldEventManager.Instance != null)
+            {
+                data.worldEvents = ZombieApocalypse.WorldEvents.WorldEventManager.Instance.GetWorldEventSaveData();
+            }
+
+            // 9. Write Save Data Atomically
             bool success = SaveFileUtility.Save(data);
             if (success)
             {
@@ -284,7 +290,13 @@ namespace ZombieApocalypse.Save
                 ZombieApocalypse.Progression.PlayerProgressionSystem.Instance.RestoreProgressionState(data.progression);
             }
 
-            // 9. Refresh UI
+            // 9. Restore World Events State
+            if (ZombieApocalypse.WorldEvents.WorldEventManager.Instance != null && data.worldEvents != null)
+            {
+                ZombieApocalypse.WorldEvents.WorldEventManager.Instance.RestoreWorldEventState(data.worldEvents);
+            }
+
+            // 10. Refresh UI
             MissionUI missionUI = FindObjectOfType<MissionUI>();
             if (missionUI != null) missionUI.RefreshUI();
 
