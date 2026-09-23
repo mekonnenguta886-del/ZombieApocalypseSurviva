@@ -130,6 +130,8 @@ namespace ZombieApocalypse.World
             }
             CreateDoor(safeHouseObj.transform, "Safe House Door", new Vector3(0f, 1.5f, 6f), false, null);
             CreateWorkbench(safeHouseObj.transform, "Weapon Workbench", new Vector3(3f, 0.8f, 3f));
+            CreateBaseStash(safeHouseObj.transform, "Base Stash Chest", new Vector3(-3f, 0.8f, 3f));
+            CreateBed(safeHouseObj.transform, "Safe House Bed", new Vector3(-3f, 0.5f, -3f));
 
             // 2. Abandoned House (Position: 25, 0, 0)
             CreateLocationBuilding(worldRoot.transform, "AbandonedHouse", new Vector3(25f, 0f, 0f), new Vector3(10f, 4f, 10f), "ABANDONED HOUSE", "loc_abandoned_house", new Color(0.7f, 0.5f, 0.2f), out GameObject houseObj);
@@ -343,6 +345,36 @@ namespace ZombieApocalypse.World
             Workbench workbench = benchObj.AddComponent<Workbench>();
             var nameF = typeof(Workbench).GetField("workbenchName", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             if (nameF != null) nameF.SetValue(workbench, benchName);
+        }
+
+        private void CreateBaseStash(Transform parent, string stashName, Vector3 pos)
+        {
+            GameObject stashObj = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            stashObj.name = stashName;
+            stashObj.transform.SetParent(parent);
+            stashObj.transform.position = pos;
+            stashObj.transform.localScale = new Vector3(1.5f, 1.0f, 1.2f);
+            SetMaterialColor(stashObj, new Color(0.2f, 0.6f, 0.4f));
+
+            if (stashObj.GetComponent<ZombieApocalypse.SafeHouse.BaseStashContainer>() == null)
+            {
+                stashObj.AddComponent<ZombieApocalypse.SafeHouse.BaseStashContainer>();
+            }
+        }
+
+        private void CreateBed(Transform parent, string bedName, Vector3 pos)
+        {
+            GameObject bedObj = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            bedObj.name = bedName;
+            bedObj.transform.SetParent(parent);
+            bedObj.transform.position = pos;
+            bedObj.transform.localScale = new Vector3(1.5f, 0.6f, 2.5f);
+            SetMaterialColor(bedObj, new Color(0.3f, 0.3f, 0.7f));
+
+            if (bedObj.GetComponent<ZombieApocalypse.SafeHouse.BedRestInteractable>() == null)
+            {
+                bedObj.AddComponent<ZombieApocalypse.SafeHouse.BedRestInteractable>();
+            }
         }
 
         private void CreateWorldLabel(Transform parent, Vector3 pos, string text, Color color)

@@ -178,7 +178,13 @@ namespace ZombieApocalypse.Save
                 data.worldTime.activeWeatherId = ZombieApocalypse.World.WeatherManager.Instance.ActiveWeather.weatherId;
             }
 
-            // 11. Write Save Data Atomically
+            // 11. Save Safe House State
+            if (ZombieApocalypse.SafeHouse.SafeHouseManager.Instance != null)
+            {
+                data.safeHouse = ZombieApocalypse.SafeHouse.SafeHouseManager.Instance.GetSafeHouseSaveData();
+            }
+
+            // 12. Write Save Data Atomically
             bool success = SaveFileUtility.Save(data);
             if (success)
             {
@@ -332,7 +338,13 @@ namespace ZombieApocalypse.Save
                 }
             }
 
-            // 12. Refresh UI
+            // 12. Restore Safe House State
+            if (ZombieApocalypse.SafeHouse.SafeHouseManager.Instance != null)
+            {
+                ZombieApocalypse.SafeHouse.SafeHouseManager.Instance.RestoreSafeHouseState(data.safeHouse);
+            }
+
+            // 13. Refresh UI
             MissionUI missionUI = FindObjectOfType<MissionUI>();
             if (missionUI != null) missionUI.RefreshUI();
 

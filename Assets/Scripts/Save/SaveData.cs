@@ -133,6 +133,18 @@ namespace ZombieApocalypse.Save
         public string activeWeatherId = "weather_clear";
     }
 
+    [Serializable]
+    public class SafeHouseSaveData
+    {
+        public int stashCapacity = 20;
+        public List<InventorySlotSaveData> stashItems = new List<InventorySlotSaveData>();
+        public int stashUpgradeLevel = 0;
+        public int bedUpgradeLevel = 0;
+        public int fortificationLevel = 0;
+        public int lastRestedDay = 0;
+        public float restFatigueCooldown = 0f;
+    }
+
     /// <summary>
     /// Root serializable DTO for JSON save file persistence.
     /// Does not store any UnityEngine objects or runtime references directly.
@@ -153,5 +165,6 @@ namespace ZombieApocalypse.Save
         public WorldEventSaveData worldEvents = new WorldEventSaveData();
         public EnvironmentalSaveData environmental = new EnvironmentalSaveData();
         public WorldTimeSaveData worldTime = new WorldTimeSaveData();
+        public SafeHouseSaveData safeHouse = new SafeHouseSaveData();
     }
 }

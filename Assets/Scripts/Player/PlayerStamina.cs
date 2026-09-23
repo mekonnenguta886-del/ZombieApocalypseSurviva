@@ -50,6 +50,15 @@ namespace ZombieApocalypse.Player
             return true;
         }
 
+        /// <summary>
+        /// Restores player stamina pool by specified amount up to maxStamina.
+        /// </summary>
+        public void RestoreStamina(float amount)
+        {
+            currentStamina = Mathf.Clamp(currentStamina + amount, 0f, maxStamina);
+            OnStaminaChanged?.Invoke(currentStamina, maxStamina);
+        }
+
         private void RegenerateStamina()
         {
             if (Time.time < lastDrainTime + regenDelaySeconds) return;
