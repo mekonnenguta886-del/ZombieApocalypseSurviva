@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using ZombieApocalypse.Player;
@@ -13,6 +14,9 @@ namespace ZombieApocalypse.World
     [RequireComponent(typeof(Collider))]
     public class SafeZoneTrigger : MonoBehaviour
     {
+        public static event Action OnPlayerEnteredSafeZone;
+        public static event Action OnPlayerExitedSafeZone;
+
         private static bool isPlayerInSafeZone = false;
         private static List<Collider> safeZoneColliders = new List<Collider>();
 
@@ -65,8 +69,13 @@ namespace ZombieApocalypse.World
 
             if (player != null)
             {
+                bool wasInSafeZone = isPlayerInSafeZone;
                 isPlayerInSafeZone = true;
                 Debug.Log("[SafeZoneTrigger] Player entered Safe Zone! Zombie aggression paused.");
+                if (!wasInSafeZone)
+                {
+                    OnPlayerEnteredSafeZone?.Invoke();
+                }
             }
         }
 
@@ -77,8 +86,13 @@ namespace ZombieApocalypse.World
 
             if (player != null)
             {
+                bool wasInSafeZone = isPlayerInSafeZone;
                 isPlayerInSafeZone = false;
                 Debug.Log("[SafeZoneTrigger] Player exited Safe Zone.");
+                if (wasInSafeZone)
+                {
+                    OnPlayerExitedSafeZone?.Invoke();
+                }
             }
         }
     }

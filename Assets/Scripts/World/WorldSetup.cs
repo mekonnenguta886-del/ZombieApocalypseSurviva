@@ -74,6 +74,12 @@ namespace ZombieApocalypse.World
                 GameObject weatherObj = new GameObject("[WeatherManager]");
                 weatherObj.AddComponent<ZombieApocalypse.World.WeatherManager>();
             }
+
+            if (ZombieApocalypse.SafeHouse.SafeHouseManager.Instance == null && FindObjectOfType<ZombieApocalypse.SafeHouse.SafeHouseManager>() == null)
+            {
+                GameObject shObj = new GameObject("[SafeHouseManager]");
+                shObj.AddComponent<ZombieApocalypse.SafeHouse.SafeHouseManager>();
+            }
         }
 
         private void LoadDefaultItemData()
