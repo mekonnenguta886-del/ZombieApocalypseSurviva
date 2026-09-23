@@ -15,6 +15,7 @@ namespace ZombieApocalypse.SafeHouse
     /// </summary>
     public class BedRestInteractable : MonoBehaviour, IInteractable
     {
+        public static event Action OnBedInteracted;
         public static event Action<int> OnPlayerRested; // targetDay
 
         [Header("Rest Configuration")]
@@ -36,6 +37,7 @@ namespace ZombieApocalypse.SafeHouse
         {
             if (!CanInteract(player)) return;
 
+            OnBedInteracted?.Invoke();
             TryRest(player);
         }
 

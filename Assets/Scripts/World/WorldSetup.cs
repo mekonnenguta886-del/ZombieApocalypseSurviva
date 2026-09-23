@@ -132,6 +132,7 @@ namespace ZombieApocalypse.World
             CreateWorkbench(safeHouseObj.transform, "Weapon Workbench", new Vector3(3f, 0.8f, 3f));
             CreateBaseStash(safeHouseObj.transform, "Base Stash Chest", new Vector3(-3f, 0.8f, 3f));
             CreateBed(safeHouseObj.transform, "Safe House Bed", new Vector3(-3f, 0.5f, -3f));
+            CreateUpgradeTerminal(safeHouseObj.transform, "Base Upgrade Terminal", new Vector3(3f, 0.8f, -3f));
 
             // 2. Abandoned House (Position: 25, 0, 0)
             CreateLocationBuilding(worldRoot.transform, "AbandonedHouse", new Vector3(25f, 0f, 0f), new Vector3(10f, 4f, 10f), "ABANDONED HOUSE", "loc_abandoned_house", new Color(0.7f, 0.5f, 0.2f), out GameObject houseObj);
@@ -377,6 +378,21 @@ namespace ZombieApocalypse.World
             }
         }
 
+        private void CreateUpgradeTerminal(Transform parent, string terminalName, Vector3 pos)
+        {
+            GameObject termObj = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            termObj.name = terminalName;
+            termObj.transform.SetParent(parent);
+            termObj.transform.position = pos;
+            termObj.transform.localScale = new Vector3(1.2f, 1.2f, 0.8f);
+            SetMaterialColor(termObj, new Color(0.7f, 0.5f, 0.1f));
+
+            if (termObj.GetComponent<ZombieApocalypse.SafeHouse.BaseUpgradeTerminal>() == null)
+            {
+                termObj.AddComponent<ZombieApocalypse.SafeHouse.BaseUpgradeTerminal>();
+            }
+        }
+
         private void CreateWorldLabel(Transform parent, Vector3 pos, string text, Color color)
         {
             GameObject labelObj = new GameObject("WorldLabel");
@@ -517,6 +533,11 @@ namespace ZombieApocalypse.World
             if (canvasObj.GetComponent<WorldTimeUIController>() == null && FindObjectOfType<WorldTimeUIController>() == null)
             {
                 canvasObj.AddComponent<WorldTimeUIController>();
+            }
+
+            if (canvasObj.GetComponent<ZombieApocalypse.SafeHouse.SafeHouseUIController>() == null && FindObjectOfType<ZombieApocalypse.SafeHouse.SafeHouseUIController>() == null)
+            {
+                canvasObj.AddComponent<ZombieApocalypse.SafeHouse.SafeHouseUIController>();
             }
 
             GameObject missionPanel = GameObject.Find("MissionPanel");

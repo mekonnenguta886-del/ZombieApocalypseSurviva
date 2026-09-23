@@ -17,6 +17,7 @@ namespace ZombieApocalypse.SafeHouse
     /// </summary>
     public class BaseStashContainer : MonoBehaviour, IInteractable
     {
+        public static event Action OnStashInteracted;
         public event Action OnStashUpdated;
         public event Action<string> OnStashNotification;
 
@@ -47,6 +48,7 @@ namespace ZombieApocalypse.SafeHouse
 
             Debug.Log($"[BaseStashContainer] Player interacted with Base Stash ({stashSlots.Count}/{capacity} slots used).");
             OnStashNotification?.Invoke($"Base Stash opened ({stashSlots.Count}/{capacity} slots)");
+            OnStashInteracted?.Invoke();
         }
 
         public void SetCapacity(int newCapacity)
