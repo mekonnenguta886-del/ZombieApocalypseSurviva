@@ -51,6 +51,12 @@ namespace ZombieApocalypse.World
                 wemObj.AddComponent<ZombieApocalypse.WorldEvents.WorldEventManager>();
             }
 
+            if (ZombieApocalypse.WorldEvents.WorldEventSpawner.Instance == null && FindObjectOfType<ZombieApocalypse.WorldEvents.WorldEventSpawner>() == null)
+            {
+                GameObject wesObj = new GameObject("[WorldEventSpawner]");
+                wesObj.AddComponent<ZombieApocalypse.WorldEvents.WorldEventSpawner>();
+            }
+
             if (ZombieApocalypse.Progression.PlayerProgressionSystem.Instance == null && FindObjectOfType<ZombieApocalypse.Progression.PlayerProgressionSystem>() == null)
             {
                 GameObject progObj = new GameObject("[PlayerProgressionSystem]");

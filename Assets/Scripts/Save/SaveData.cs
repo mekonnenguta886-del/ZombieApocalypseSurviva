@@ -114,7 +114,10 @@ namespace ZombieApocalypse.Save
         public string currentState = "Inactive";
         public int currentWaveIndex = 0;
         public float eventTimer = 0f;
+        public int currentProgressAmount = 0;
         public List<string> completedEventIds = new List<string>();
+        public List<string> cooldownEventIds = new List<string>();
+        public List<float> cooldownRemainingTimes = new List<float>();
     }
 
     [Serializable]

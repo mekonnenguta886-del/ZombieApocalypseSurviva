@@ -132,16 +132,18 @@ namespace ZombieApocalypse.UI
                     case WorldEventType.WaveHorde:
                     case WorldEventType.Outbreak:
                     case WorldEventType.SupplyAmbush:
+                    case WorldEventType.HighThreatZone:
                         eventProgressText.text = $"Wave: {wave}/{maxWaves}  |  Zombies Left: {zombiesRemaining}";
                         break;
                     case WorldEventType.BossEncounter:
                         eventProgressText.text = "ELIMINATE THE BOSS ZOMBIE!";
                         break;
                     case WorldEventType.SupplyDrop:
-                        eventProgressText.text = "Recover emergency supply drop!";
+                    case WorldEventType.LootDiscovery:
+                        eventProgressText.text = "Search & recover emergency supply crate!";
                         break;
                     case WorldEventType.SurvivorRescue:
-                        eventProgressText.text = "Escort survivor to Safe House!";
+                        eventProgressText.text = "Interact with survivor distress beacon!";
                         break;
                     case WorldEventType.TimedScavenge:
                         eventProgressText.text = $"Collect required supplies before timer expires!";

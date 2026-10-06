@@ -133,7 +133,7 @@ namespace ZombieApocalypse.Missions
             {
                 if (obj == null || obj.IsCompleted) continue;
 
-                if (obj.type == ObjectiveType.SurviveHorde)
+                if (obj.type == ObjectiveType.SurviveHorde || (eventData != null && !string.IsNullOrEmpty(eventData.associatedObjectiveId) && obj.objectiveId.Equals(eventData.associatedObjectiveId, StringComparison.OrdinalIgnoreCase)))
                 {
                     obj.currentAmount = obj.requiredAmount;
                     OnObjectiveUpdated?.Invoke(activeMissionData, obj);
