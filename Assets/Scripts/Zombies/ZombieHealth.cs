@@ -83,6 +83,11 @@ namespace ZombieApocalypse.Zombies
                 animator.SetTrigger(HurtTriggerHash);
             }
 
+            if (ZombieApocalypse.Audio.AudioManager.Instance != null && currentHealth > 0)
+            {
+                ZombieApocalypse.Audio.AudioManager.Instance.PlayZombieSound("hit", transform.position);
+            }
+
             // Trigger Stagger in ZombieAI if final damage exceeds stagger threshold (adjusted by stagger resistance) and zombie lacks stagger armor
             float effectiveStaggerThreshold = zombieData != null ? zombieData.staggerThreshold * (1f + zombieData.staggerResistance) : 30.0f;
             if (currentHealth > 0f && zombieData != null && !zombieData.hasStaggerArmor && finalDamage >= effectiveStaggerThreshold)
@@ -104,6 +109,11 @@ namespace ZombieApocalypse.Zombies
         {
             if (isDead) return;
             isDead = true;
+
+            if (ZombieApocalypse.Audio.AudioManager.Instance != null)
+            {
+                ZombieApocalypse.Audio.AudioManager.Instance.PlayZombieSound("death", transform.position);
+            }
 
             OnZombieDied?.Invoke();
             OnZombieKilled?.Invoke(this);

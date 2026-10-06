@@ -188,6 +188,12 @@ namespace ZombieApocalypse.Weapons
 
             currentSlotIndex = index;
             isReloading = false;
+
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlayUISound("weapon_switch");
+            }
+
             NotifyHUD();
             Debug.Log($"[WeaponController] Switched weapon to: {CurrentWeapon?.weaponName}");
         }
@@ -221,6 +227,10 @@ namespace ZombieApocalypse.Weapons
             if (CurrentWeapon.reloadSound != null && AudioManager.Instance != null)
             {
                 AudioManager.Instance.PlaySFX(CurrentWeapon.reloadSound, transform.position);
+            }
+            else if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlayReload(CurrentWeapon.weaponName, transform.position);
             }
 
             yield return new WaitForSeconds(CurrentWeapon.reloadTime);
@@ -259,6 +269,10 @@ namespace ZombieApocalypse.Weapons
                     else if (CurrentWeapon.emptySound != null && AudioManager.Instance != null)
                     {
                         AudioManager.Instance.PlaySFX(CurrentWeapon.emptySound, transform.position);
+                    }
+                    else if (AudioManager.Instance != null)
+                    {
+                        AudioManager.Instance.PlayEmptyClick(transform.position);
                     }
                 }
 
@@ -305,16 +319,28 @@ namespace ZombieApocalypse.Weapons
             {
                 AudioManager.Instance.PlaySFX(CurrentWeapon.fireSound, transform.position);
             }
+            else if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlayWeaponFire(CurrentWeapon.weaponName, transform.position);
+            }
 
             // Broadcast Gunshot Noise Event for AI Perception
             float noiseRad = CurrentWeapon != null ? CurrentWeapon.fireNoiseRadius : 25.0f;
             NoiseManager.EmitNoise(transform.position, noiseRad, NoiseType.Gunshot);
 
-            // Spawn Muzzle Flash VFX
+            // Spawn Muzzle Flash VFX via Object Pool
             if (CurrentWeapon.muzzleFlashPrefab != null && muzzleTransform != null)
             {
-                GameObject vfx = Instantiate(CurrentWeapon.muzzleFlashPrefab, muzzleTransform.position, muzzleTransform.rotation);
-                Destroy(vfx, 1.0f);
+                if (ZombieApocalypse.Systems.SimpleObjectPool.Instance != null)
+                {
+                    GameObject vfx = ZombieApocalypse.Systems.SimpleObjectPool.Instance.Spawn(CurrentWeapon.muzzleFlashPrefab, muzzleTransform.position, muzzleTransform.rotation);
+                    ZombieApocalypse.Systems.SimpleObjectPool.Instance.Despawn(vfx, 1.0f);
+                }
+                else
+                {
+                    GameObject vfx = Instantiate(CurrentWeapon.muzzleFlashPrefab, muzzleTransform.position, muzzleTransform.rotation);
+                    Destroy(vfx, 1.0f);
+                }
             }
 
             NotifyHUD();
@@ -370,11 +396,19 @@ namespace ZombieApocalypse.Weapons
                     Debug.Log($"[WeaponController] Shot hit {hit.collider.name} ({(isCrit ? "CRITICAL HEADSHOT" : "BODY")}) dealing {finalDmg} damage.");
                 }
 
-                // Spawn Impact VFX if assigned
+                // Spawn Impact VFX if assigned via Object Pool
                 if (CurrentWeapon != null && CurrentWeapon.impactVFXPrefab != null)
                 {
-                    GameObject impact = Instantiate(CurrentWeapon.impactVFXPrefab, hit.point, Quaternion.LookRotation(hit.normal));
-                    Destroy(impact, 2.0f);
+                    if (ZombieApocalypse.Systems.SimpleObjectPool.Instance != null)
+                    {
+                        GameObject impact = ZombieApocalypse.Systems.SimpleObjectPool.Instance.Spawn(CurrentWeapon.impactVFXPrefab, hit.point, Quaternion.LookRotation(hit.normal));
+                        ZombieApocalypse.Systems.SimpleObjectPool.Instance.Despawn(impact, 2.0f);
+                    }
+                    else
+                    {
+                        GameObject impact = Instantiate(CurrentWeapon.impactVFXPrefab, hit.point, Quaternion.LookRotation(hit.normal));
+                        Destroy(impact, 2.0f);
+                    }
                 }
             }
         }

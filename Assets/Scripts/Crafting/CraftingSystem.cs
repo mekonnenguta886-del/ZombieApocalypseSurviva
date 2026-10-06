@@ -240,6 +240,10 @@ namespace ZombieApocalypse.Crafting
             }
 
             CraftingResult successResult = CraftingResult.CreateSuccess(recipe.recipeId, recipe.displayName);
+            if (ZombieApocalypse.Audio.AudioManager.Instance != null)
+            {
+                ZombieApocalypse.Audio.AudioManager.Instance.PlayUISound("crafting_success");
+            }
             OnCraftingCompleted?.Invoke();
             OnCraftingResult?.Invoke(successResult);
             return successResult;

@@ -291,12 +291,20 @@ namespace ZombieApocalypse.UI
         private void OnUseButtonClicked()
         {
             if (selectedSlotIndex < 0 || inventorySystem == null) return;
+            if (ZombieApocalypse.Audio.AudioManager.Instance != null)
+            {
+                ZombieApocalypse.Audio.AudioManager.Instance.PlayUISound("item_use");
+            }
             inventorySystem.UseItem(selectedSlotIndex);
         }
 
         private void OnDropButtonClicked()
         {
             if (selectedSlotIndex < 0 || inventorySystem == null) return;
+            if (ZombieApocalypse.Audio.AudioManager.Instance != null)
+            {
+                ZombieApocalypse.Audio.AudioManager.Instance.PlayUISound("item_drop");
+            }
             inventorySystem.DropItemAt(selectedSlotIndex);
         }
     }

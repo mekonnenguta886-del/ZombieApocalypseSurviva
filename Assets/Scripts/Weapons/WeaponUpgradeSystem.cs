@@ -238,6 +238,10 @@ namespace ZombieApocalypse.Weapons
             }
 
             Debug.Log($"[WeaponUpgradeSystem] Upgraded '{weapon.weaponName}' {type} to Level {newLevel}.");
+            if (ZombieApocalypse.Audio.AudioManager.Instance != null)
+            {
+                ZombieApocalypse.Audio.AudioManager.Instance.PlayUISound("upgrade_success");
+            }
             OnWeaponUpgraded?.Invoke(weapon.weaponName, type, newLevel);
 
             return WeaponUpgradeResult.CreateSuccess(weapon.weaponName, type, newLevel);

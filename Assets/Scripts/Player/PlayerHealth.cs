@@ -57,9 +57,18 @@ namespace ZombieApocalypse.Player
                 }
             }
 
+            if (ZombieApocalypse.Audio.AudioManager.Instance != null)
+            {
+                ZombieApocalypse.Audio.AudioManager.Instance.PlayUISound("player_damage");
+            }
+
             if (currentHealth <= 0f && !isDead)
             {
                 isDead = true;
+                if (ZombieApocalypse.Audio.AudioManager.Instance != null)
+                {
+                    ZombieApocalypse.Audio.AudioManager.Instance.PlayUISound("player_death");
+                }
                 OnPlayerDied?.Invoke();
                 Debug.Log("[PlayerHealth] Player eliminated!");
             }

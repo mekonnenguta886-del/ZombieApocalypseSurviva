@@ -207,10 +207,15 @@ namespace ZombieApocalypse.Player
                 isSprinting = false;
             }
 
-            // Emit Sprint Footstep Noise Event on Interval Timer for AI Perception
-            if (isSprinting && moveInput.magnitude > 0.1f && (playerHealth == null || !playerHealth.IsDead))
+            // Emit Sprint Footstep Noise Event on Interval Timer for AI Perception & Audio SFX
+            if (activeMoveSpeed > 0.1f && isGrounded && (playerHealth == null || !playerHealth.IsDead))
             {
-                if (Time.time >= lastSprintNoiseTime + sprintNoiseInterval)
+                if (ZombieApocalypse.Audio.AudioManager.Instance != null)
+                {
+                    ZombieApocalypse.Audio.AudioManager.Instance.PlayFootstep(transform.position, isSprinting);
+                }
+
+                if (isSprinting && Time.time >= lastSprintNoiseTime + sprintNoiseInterval)
                 {
                     lastSprintNoiseTime = Time.time;
                     NoiseManager.EmitNoise(transform.position, sprintNoiseRadius, NoiseType.Footstep);

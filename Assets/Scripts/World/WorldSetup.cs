@@ -45,6 +45,12 @@ namespace ZombieApocalypse.World
                 diffObj.AddComponent<DifficultyManager>();
             }
 
+            if (ZombieApocalypse.Systems.SimpleObjectPool.Instance == null && FindObjectOfType<ZombieApocalypse.Systems.SimpleObjectPool>() == null)
+            {
+                GameObject poolObj = new GameObject("[SimpleObjectPool]");
+                poolObj.AddComponent<ZombieApocalypse.Systems.SimpleObjectPool>();
+            }
+
             if (ZombieApocalypse.WorldEvents.WorldEventManager.Instance == null && FindObjectOfType<ZombieApocalypse.WorldEvents.WorldEventManager>() == null)
             {
                 GameObject wemObj = new GameObject("[WorldEventManager]");
