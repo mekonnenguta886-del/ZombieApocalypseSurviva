@@ -1,115 +1,179 @@
-# Zombie Apocalypse: Survival
+# 🧟 Zombie Apocalypse: Survival (Release Candidate)
 
-A high-quality realistic 3D third-person zombie survival game built with **Unity 6** and **C#**.
+> **Unity 6 | 3D Third-Person Survival Action | Feature-Complete Release Candidate**
+
+[![Unity 6000.0.0f1](https://img.shields.io/badge/Unity-6000.0.0f1-blue.svg?logo=unity)](https://unity.com/)
+[![Render Pipeline](https://img.shields.io/badge/Render%20Pipeline-URP-orange.svg)](https://unity.com/srp/Universal-Render-Pipeline)
+[![Build Status](https://img.shields.io/badge/Build-Windows%2064--bit-success.svg)](https://github.com/mekonnenguta886-del/ZombieApocalypseSurviva)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 ---
 
-## Project Structure
+## 📖 Overview
+
+**Zombie Apocalypse: Survival** is a feature-complete, AAA-architected third-person zombie survival game built with **Unity 6 (6000.0.0f1)** and **C#**. 
+
+Set in an abandoned post-apocalyptic city, players must explore ruined buildings, manage survival vitals (Health, Hunger, Thirst, Stamina), craft equipment, complete supply missions, upgrade weapons at the Safe House, and survive dynamic weather hazards and ferocious zombie horde attacks.
+
+---
+
+## 🌟 Key Features & Systems
+
+### 🕹️ 1. Advanced Player Controller & Camera
+* **CharacterController Locomotion**: Smooth walking, sprinting, crouching, jumping, and grounded physics.
+* **Over-the-Shoulder Camera**: Third-person orbit camera with aim-down-sight (ADS) zoom, shoulder offset, vertical recoil impulse recovery, and spherecast obstruction collision prevention.
+* **Input Customization**: Full mouse sensitivity scaling and Invert-Y axis toggling.
+
+### 🔫 2. Weaponry & Combat System
+* **3 Weapon Categories**:
+  * 🔫 **Pistol**: High mobility sidearm with quick reload.
+  * 🔴 **Shotgun**: High close-range burst damage with pellet spread.
+  * 💥 **Assault Rifle**: Automatic fire, medium-to-long range accuracy.
+* **Combat Mechanics**: Fire rate timing, magazine reload management, recoil kick, hitmarkers, critical headshot multipliers, and 3D noise event propagation that alerts nearby zombie groups.
+* **Workbench Weapon Upgrades**: Spend scrap parts to boost weapon damage, magazine capacity, and fire rate.
+
+### 🧟 3. Zombie AI & Horde Mechanics
+* **4 Zombie Variants**:
+  * 🚶 **Walker**: Standard slow zombie, high spawn count.
+  * 🏃 **Runner**: Fast aggressive zombie that rushes the player.
+  * 🛡️ **Tank**: Heavy armored zombie with high health pool and staggering attacks.
+  * 👑 **Boss Zombie**: Massive threat with unique telegraphs and full Boss HUD health bar overlay.
+* **NavMesh AI State Machine**: `Patrol`, `Search`, `Chase`, and `Attack` states.
+* **Group Alert System**: Shooting or making loud noise triggers area-of-effect noise events that rouse idle zombies.
+
+### ⛺ 4. Safe House Base & Survival Mechanics
+* **Safe House Refuge (`0, 0, 0`)**: Safe zone trigger suppressing zombie aggression and environmental hazard damage.
+* **Base Stash Chest**: Store excess loot securely.
+* **Rest Cot**: Sleep to advance time and restore health.
+* **Upgrade Terminal**: Upgrade base defenses and utilities.
+* **Survival Vitals**: Monitor Health, Stamina, Hunger, and Thirst with low survival warnings and visual indicators.
+
+### 🌧️ 5. Dynamic Day/Night & Weather Hazards
+* **24-Hour Time Clock**: Daylight hours (`06:00`–`20:00`) provide safe visibility; Nightfall (`20:00`–`06:00`) boosts zombie speed (+35%) and spawn caps (+50%).
+* **Dynamic Weather Patterns**:
+  * ☀️ **Clear Weather**: Standard conditions.
+  * 🌧️ **Heavy Rain**: Increased thirst drain rate.
+  * 🌫️ **Dense Fog**: Reduced visibility & accelerated hunger drain.
+  * ☣️ **Toxic Storm**: Airborne chemical hazard dealing periodic health damage.
+
+### 🎯 6. Missions & Dynamic World Events
+* **Mission Pipeline**: Complete multi-stage missions (e.g., *Medical Supply Run*) with world objective markers and UI checklists.
+* **World Events**: Supply Drops, Survivor Distress Calls, and Zombie Horde Waves with countdown timers and reward containers.
+
+### 💾 7. Atomic Save/Load Persistence
+* **Atomic JSON Storage**: 3-stage safe write pattern (`savegame.json.tmp` $\rightarrow$ `savegame.json.bak` $\rightarrow$ `savegame.json`) preventing corruption.
+* **Comprehensive Serialization**: Saves player transform, health, hunger, thirst, inventory, equipped weapons, ammo, mission objectives, door states, loot box states, XP perks, weather ID, and safe house storage.
+* **Main Menu "CONTINUE"**: Detects existing save files on launch and restores complete state seamlessly.
+
+### ⚙️ 8. Main Menu & Settings System
+* **Main Menu Options**: **NEW GAME**, **CONTINUE**, **SETTINGS**, and **QUIT**.
+* **Settings Modal**:
+  * **Graphics**: Performance Presets (LOW, MEDIUM, HIGH, ULTRA), Quality Level, VSync Toggle, Fullscreen.
+  * **Audio**: Master Volume, Music Volume, and SFX Volume sliders.
+  * **Gameplay**: Mouse Sensitivity slider and Invert-Y toggle.
+
+### 🔊 9. Audio Engine & Performance Pooling
+* **Spatial 3D SFX**: 16-channel non-allocating AudioSource channel pool with logarithmic distance attenuation.
+* **Procedural PCM Sound Fallback**: Programmatically synthesizes weapon fire, reload, empty click, footstep, and zombie audio feedback so sound works 100% reliably out of the box.
+* **Object Pooling**: [`SimpleObjectPool`](file:///d:/UnityProjects/ZombieApocalypseSurvival/Assets/Scripts/Systems/SimpleObjectPool.cs) for zombies and combat projectiles to maintain 60+ FPS stability.
+
+---
+
+## 🕹️ Controls Guide
+
+| Action | Control Key |
+| :--- | :--- |
+| **Move** | `W` `A` `S` `D` |
+| **Look Around** | Mouse |
+| **Aim Down Sight (ADS)** | `Right Click` (Hold) |
+| **Fire Weapon / Attack** | `Left Click` |
+| **Reload** | `R` |
+| **Sprint** | `Left Shift` (Hold) |
+| **Crouch** | `C` |
+| **Jump** | `Spacebar` |
+| **Equip Slot 1 / 2 / 3** | `1`, `2`, `3` |
+| **Interact** | `E` (Doors, Loot Crates, Workbench, Stash, Bed, Terminal) |
+| **Inventory UI** | `I` |
+| **Quick Save / Quick Load** | `F5` / `F9` |
+| **Pause / Settings** | `Escape` |
+
+---
+
+## 📁 Repository Directory Structure
 
 ```text
 ZombieApocalypseSurvival/
-├── .gitignore
-├── README.md
-├── Packages/
-│   └── manifest.json                # Pre-configured Unity 6 dependencies (URP, Input System, TMP, AI Navigation)
-├── ProjectSettings/
-│   ├── ProjectSettings.asset
-│   └── ProjectVersion.txt           # Target Unity 6 Version (6000.0.0f1)
-└── Assets/
-    ├── Art/                         # 3D Mesh Models, Textures, Shaders, VFX
-    │   ├── Characters/
-    │   │   ├── Player/
-    │   │   └── Zombies/
-    │   ├── Weapons/
-    │   ├── Environment/
-    │   ├── Props/
-    │   └── VFX/
-    ├── Animations/                  # Animation Controllers, Clips, Blend Trees
-    │   ├── Player/
-    │   ├── Zombies/
-    │   └── Weapons/
-    ├── Audio/                       # Music, Sound Effects, Spatial Audio
-    │   ├── Music/
-    │   ├── Weapons/
-    │   ├── Zombies/
-    │   ├── Environment/
-    │   └── UI/
-    ├── Materials/                   # PBR and URP Materials
-    ├── Prefabs/                     # Reusable GameObject Assemblies
-    │   ├── Player/
-    │   ├── Zombies/
-    │   ├── Weapons/
-    │   ├── Environment/
-    │   └── UI/
-    ├── Scenes/                      # Core Game Environments
-    │   ├── MainMenu/
-    │   │   └── MainMenu.unity       # Entry point scene for main menu
-    │   ├── Gameplay/
-    │   │   └── Gameplay.unity       # Main urban city survival environment
-    │   └── Test/
-    │       └── TestArena.unity      # Isolated prototyping & combat testing sandbox
-    ├── Scripts/                     # Clean C# System Architecture
-    │   ├── Player/                  # Player locomotion, health, stamina, camera, animations
-    │   ├── Weapons/                 # Weapon stats, controller, shooting, recoil, ammo
-    │   ├── Zombies/                 # Zombie types data & health
-    │   ├── AI/                      # NavMesh AI state machine (Patrol, Search, Chase, Attack)
-    │   ├── Missions/                # Objective pipeline & progress tracking
-    │   ├── Inventory/               # Inventory slots & item storage
-    │   ├── UI/                      # Dynamic HUD, Main Menu, Pause Menu
-    │   ├── Audio/                   # Sound effects & background music
-    │   └── Systems/                 # GameManager singleton & SaveSystem JSON data
-    ├── UI/                          # Textures, Sprites, Fonts
-    ├── Resources/                   # Dynamic runtime loading assets
-    └── Settings/                    # URP Graphic Render Pipeline Assets & Settings
+├── Assets/
+│   ├── Editor/                      # Production Build Automation Scripts
+│   │   └── BuildScript.cs
+│   ├── Scenes/                      # Game Environments
+│   │   ├── MainMenu/MainMenu.unity # Entry point Main Menu scene
+│   │   ├── Gameplay/Gameplay.unity # Core city survival environment
+│   │   └── Test/TestArena.unity    # Prototyping & combat testing arena
+│   ├── Scripts/                     # Modular C# Architecture
+│   │   ├── AI/                      # Zombie FSM & Noise propagation (ZombieAI, NoiseManager)
+│   │   ├── Audio/                   # Spatial Audio & PCM Synthesis (AudioManager)
+│   │   ├── Crafting/                # Recipe data & CraftingSystem
+│   │   ├── Environment/             # Hazard zones & EnvironmentalConditionManager
+│   │   ├── Inventory/               # ItemData, LootContainer, InventorySystem
+│   │   ├── Missions/                # MissionData & MissionManager
+│   │   ├── Player/                  # Locomotion, Camera, Health, Stamina, Survival
+│   │   ├── Progression/             # XP & Perks System (PlayerProgressionSystem)
+│   │   ├── SafeHouse/               # SafeHouseManager, BaseStash, BedRest, UpgradeTerminal
+│   │   ├── Save/                    # SaveManager & atomic SaveFileUtility
+│   │   ├── Systems/                 # GameManager, DifficultyManager, SettingsManager
+│   │   ├── UI/                      # HUDController, MainMenuUI, PauseMenuUI, SettingsUIController
+│   │   ├── Weapons/                 # WeaponController, WeaponUpgradeSystem
+│   │   ├── World/                   # WorldTimeManager, WeatherManager, DoorController, WorldSetup
+│   │   ├── WorldEvents/             # WorldEventManager & SupplyDropContainer
+│   │   └── Zombies/                 # ZombieSpawner, ZombieHealth, ZombieHitbox
+│   └── Settings/                    # Universal Render Pipeline (URP) Config
+└── ProjectSettings/                 # Unity 6 Project & Tag Configurations
 ```
 
 ---
 
-## Core Systems Architecture
+## 🛠️ Building & Running
 
-### 1. Core & Save System (`ZombieApocalypse.Core`)
-* [`GameManager.cs`](file:///D:/UnityProjects/ZombieApocalypseSurvival/Assets/Scripts/Systems/GameManager.cs): Central game state controller (`MainMenu`, `Playing`, `Paused`, `GameOver`, `MissionComplete`).
-* [`SaveSystem.cs`](file:///D:/UnityProjects/ZombieApocalypseSurvival/Assets/Scripts/Systems/SaveSystem.cs): Handles JSON serialization of player health, position, inventory, and mission progress to `Application.persistentDataPath`.
+### Requirements
+* **Unity Version**: Unity 6 (`6000.0.0f1`) or higher
+* **Target Platform**: Windows 64-bit (Standalone)
+* **Render Pipeline**: Universal Render Pipeline (URP)
 
-### 2. Player System (`ZombieApocalypse.Player`)
-* [`PlayerController.cs`](file:///D:/UnityProjects/ZombieApocalypseSurvival/Assets/Scripts/Player/PlayerController.cs): CharacterController locomotion, grounded physics, sprint, crouch, and jump states.
-* [`PlayerCamera.cs`](file:///D:/UnityProjects/ZombieApocalypseSurvival/Assets/Scripts/Player/PlayerCamera.cs): Third-person camera orbit and target tracking.
-* [`PlayerHealth.cs`](file:///D:/UnityProjects/ZombieApocalypseSurvival/Assets/Scripts/Player/PlayerHealth.cs): Health pool management and event notifications (`OnHealthChanged`, `OnPlayerDied`).
-* [`PlayerStamina.cs`](file:///D:/UnityProjects/ZombieApocalypseSurvival/Assets/Scripts/Player/PlayerStamina.cs): Stamina consumption during sprint with automatic delayed regeneration.
-* [`PlayerAnimation.cs`](file:///D:/UnityProjects/ZombieApocalypseSurvival/Assets/Scripts/Player/PlayerAnimation.cs): Animator component driver binding locomotion speed, aiming, firing, and reload parameters.
+### Running in Unity Editor
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/mekonnenguta886-del/ZombieApocalypseSurviva.git
+   ```
+2. Open the project folder in **Unity Hub** (version 6000.0.0f1).
+3. Open [`Assets/Scenes/MainMenu/MainMenu.unity`](file:///d:/UnityProjects/ZombieApocalypseSurvival/Assets/Scenes/MainMenu/MainMenu.unity).
+4. Press **Play**.
 
-### 3. Weapon System (`ZombieApocalypse.Weapons`)
-* [`WeaponData.cs`](file:///D:/UnityProjects/ZombieApocalypseSurvival/Assets/Scripts/Weapons/WeaponData.cs): ScriptableObject defining weapon stats (Pistol, Shotgun, Assault Rifle damage, fire rate, mag size, recoil).
-* [`WeaponController.cs`](file:///D:/UnityProjects/ZombieApocalypseSurvival/Assets/Scripts/Weapons/WeaponController.cs): Equipping weapons, rate-of-fire timing, magazine ammo tracking, and reload handling.
-
-### 4. Zombie & AI System (`ZombieApocalypse.Zombies` & `ZombieApocalypse.AI`)
-* [`ZombieData.cs`](file:///D:/UnityProjects/ZombieApocalypseSurvival/Assets/Scripts/Zombies/ZombieData.cs): ScriptableObject defining stats for Walker, Runner, Tank, and Boss zombie variants.
-* [`ZombieHealth.cs`](file:///D:/UnityProjects/ZombieApocalypseSurvival/Assets/Scripts/Zombies/ZombieHealth.cs): Zombie health, hit feedback, and elimination callbacks.
-* [`ZombieAI.cs`](file:///D:/UnityProjects/ZombieApocalypseSurvival/Assets/Scripts/AI/ZombieAI.cs): NavMeshAgent AI finite state machine (`Idle`, `Patrol`, `Search`, `Chase`, `Attack`).
-
-### 5. Mission System (`ZombieApocalypse.Missions`)
-* [`MissionData.cs`](file:///D:/UnityProjects/ZombieApocalypseSurvival/Assets/Scripts/Missions/MissionData.cs): ScriptableObject for mission objectives and target requirements.
-* [`MissionManager.cs`](file:///D:/UnityProjects/ZombieApocalypseSurvival/Assets/Scripts/Missions/MissionManager.cs): Tracks active mission progress and triggers mission completion events.
-
-### 6. Inventory System (`ZombieApocalypse.Inventory`)
-* [`ItemData.cs`](file:///D:/UnityProjects/ZombieApocalypseSurvival/Assets/Scripts/Inventory/ItemData.cs): ScriptableObject defining items (Weapons, Ammo, Medkits, Resources).
-* [`InventoryManager.cs`](file:///D:/UnityProjects/ZombieApocalypseSurvival/Assets/Scripts/Inventory/InventoryManager.cs): Slot storage, item stacking, and inventory updates.
-
-### 7. UI System (`ZombieApocalypse.UI`)
-* [`HUDController.cs`](file:///D:/UnityProjects/ZombieApocalypseSurvival/Assets/Scripts/UI/HUDController.cs): Realtime HUD display for Health, Stamina, Ammo, Crosshair, and Objectives.
-* [`MainMenuUI.cs`](file:///D:/UnityProjects/ZombieApocalypseSurvival/Assets/Scripts/UI/MainMenuUI.cs): Main menu screen button handlers.
-* [`PauseMenuUI.cs`](file:///D:/UnityProjects/ZombieApocalypseSurvival/Assets/Scripts/UI/PauseMenuUI.cs): Pause menu overlay toggle and scene reloading.
-
-### 8. Audio System (`ZombieApocalypse.Audio`)
-* [`AudioManager.cs`](file:///D:/UnityProjects/ZombieApocalypseSurvival/Assets/Scripts/Audio/AudioManager.cs): Global manager for playing spatial 3D SFX and background music tracks.
+### Standalone Windows 64-bit Release Build
+To generate a production release build:
+1. Open Unity Editor.
+2. Click top menu: **Build $\rightarrow$ Build Windows 64-Bit Release**.
+3. The standalone `.exe` package will compile to:
+   ```text
+   D:\UnityProjects\ZombieApocalypseSurvival_Builds\Windows64\ZombieApocalypseSurvival.exe
+   ```
 
 ---
 
-## Phase 2 Roadmap
+## 📜 Development History (Phases 1–20)
 
-In **Phase 2**, we will build:
-1. **Player Locomotion & Camera**:
-   - Unity New Input System actions mapping (WASD, Mouse Look, Shift Sprint, Ctrl Crouch, Space Jump).
-   - CharacterController physics integration with smooth third-person camera rotation and mouse orbit.
-2. **Player Visual Setup in TestArena**:
-   - Setting up a temporary capsule / mannequin player object with ground detection and third-person camera target.
+| Phase | Description |
+| :--- | :--- |
+| **Phase 1–2** | Foundation, Player Controller, 3D Camera & Animations |
+| **Phase 3–4** | Zombie AI, Combat Foundation & Weapon Systems |
+| **Phase 5–6** | Inventory, Survival Vitals, World Locations & Missions |
+| **Phase 7–13**| Atomic Save/Load, Zombie Variants/Boss, Crafting, Upgrades & XP Perks |
+| **Phase 14–16**| World Events, Hazards, Dynamic Day/Night Cycle & Weather |
+| **Phase 17–19**| Safe House Base, Final Gameplay Integration, Audio & UI/UX Polish |
+| **Phase 20** | **Final QA, Visual Upgrade, Settings System & Windows Production Build** |
+
+---
+
+## 📝 License
+
+Distributed under the MIT License. See `LICENSE` for more information.
