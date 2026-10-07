@@ -32,6 +32,8 @@ namespace ZombieApocalypse.Save
 
         private PlayerInputHandler inputHandler;
 
+        public static bool LoadSaveOnSceneLoad { get; set; } = false;
+
         private void Awake()
         {
             if (Instance != null && Instance != this)
@@ -41,6 +43,19 @@ namespace ZombieApocalypse.Save
             }
             Instance = this;
             ItemRegistry.Initialize();
+        }
+
+        private void Start()
+        {
+            if (LoadSaveOnSceneLoad)
+            {
+                LoadSaveOnSceneLoad = false;
+                if (SaveFileUtility.HasSave())
+                {
+                    Debug.Log("[SaveManager] Scene loaded with Continue request. Auto-restoring save state...");
+                    LoadGame();
+                }
+            }
         }
 
         private void Update()

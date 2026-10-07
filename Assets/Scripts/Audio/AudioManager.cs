@@ -187,6 +187,31 @@ namespace ZombieApocalypse.Audio
             ambienceSource.Play();
         }
 
+        public void SetMasterVolume(float volume)
+        {
+            AudioListener.volume = Mathf.Clamp01(volume);
+        }
+
+        public void SetMusicVolume(float volume)
+        {
+            float vol = Mathf.Clamp01(volume);
+            if (musicSource != null) musicSource.volume = vol * 0.5f;
+            if (ambienceSource != null) ambienceSource.volume = vol * 0.4f;
+        }
+
+        public void SetSFXVolume(float volume)
+        {
+            float vol = Mathf.Clamp01(volume);
+            if (sfxSource != null) sfxSource.volume = vol * 0.8f;
+            if (channelPool != null)
+            {
+                foreach (var channel in channelPool)
+                {
+                    if (channel != null) channel.volume = vol;
+                }
+            }
+        }
+
         // ==========================================
         // STAGE 2 — PROCEDURAL AUDIO FALLBACKS & FEEDBACK
         // ==========================================

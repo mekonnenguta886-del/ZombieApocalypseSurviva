@@ -50,6 +50,8 @@ namespace ZombieApocalypse.Player
 
         public Transform TargetTransform => targetTransform;
         public bool IsAiming => isAiming;
+        public float MouseSensitivity { get => mouseSensitivity; set => mouseSensitivity = Mathf.Clamp(value, 0.1f, 10f); }
+        public bool InvertY { get; set; } = false;
 
         private void Awake()
         {
@@ -90,7 +92,7 @@ namespace ZombieApocalypse.Player
 
             Vector2 lookInput = PlayerInputHandler.Instance.LookInput;
             yaw += lookInput.x * mouseSensitivity;
-            pitch -= lookInput.y * mouseSensitivity;
+            pitch += (InvertY ? lookInput.y : -lookInput.y) * mouseSensitivity;
             pitch = Mathf.Clamp(pitch, minPitch, maxPitch);
 
             // Smoothly recover recoil impulse offset back to zero
